@@ -48,12 +48,41 @@ const validInput = {
 };
 
 describe("ticketService", () => {
+  const originalFetch = global.fetch;
+  const originalOpenAiKey = process.env.OPENAI_API_KEY;
+
   beforeAll(async () => {
     await verifyTestDatabaseConnection();
   });
 
   beforeEach(async () => {
     await truncateTables();
+    process.env.OPENAI_API_KEY = "test-openai-key";
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            content: [
+              {
+                type: "output_text",
+                text: JSON.stringify({
+                  valid_for_support_ticket: true,
+                  rejection_reason: "",
+                }),
+              },
+            ],
+          },
+        ],
+      }),
+    }) as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    process.env.OPENAI_API_KEY = originalOpenAiKey;
   });
 
   afterAll(async () => {

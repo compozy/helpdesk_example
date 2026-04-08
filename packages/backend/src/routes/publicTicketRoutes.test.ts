@@ -57,6 +57,38 @@ describe("/api/public/:orgSlug/tickets", () => {
   });
 
   describe("POST /api/public/:orgSlug/tickets", () => {
+    const originalFetch = global.fetch;
+    const originalOpenAiKey = process.env.OPENAI_API_KEY;
+
+    beforeEach(() => {
+      process.env.OPENAI_API_KEY = "test-openai-key";
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: "completed",
+          output: [
+            {
+              type: "message",
+              content: [
+                {
+                  type: "output_text",
+                  text: JSON.stringify({
+                    valid_for_support_ticket: true,
+                    rejection_reason: "",
+                  }),
+                },
+              ],
+            },
+          ],
+        }),
+      }) as unknown as typeof fetch;
+    });
+
+    afterEach(() => {
+      global.fetch = originalFetch;
+      process.env.OPENAI_API_KEY = originalOpenAiKey;
+    });
+
     it("returns 201 with ticket code when valid data is provided", async () => {
       const org = await createOrganization("Acme Corp", "acme-corp");
 
@@ -98,6 +130,102 @@ describe("/api/public/:orgSlug/tickets", () => {
       expect(response.status).toBe(201);
       expect(response.body.code).toMatch(/^TK-[A-Z0-9]{8}$/);
       expect(response.body.message).toBe("Ticket created successfully");
+    });
+
+    it("returns 400 when image validation rejects an attachment", async () => {
+      const org = await createOrganization("Acme Corp", "acme-corp");
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: "completed",
+          output: [
+            {
+              type: "message",
+              content: [
+                {
+                  type: "output_text",
+                  text: JSON.stringify({
+                    valid_for_support_ticket: false,
+                    rejection_reason: "Image appears unrelated to the support request.",
+                  }),
+                },
+              ],
+            },
+          ],
+        }),
+      }) as unknown as typeof fetch;
+
+      const response = await request(app)
+        .post(`/api/public/${org.slug}/tickets`)
+        .send({
+          name: "Jane Doe",
+          email: "jane@example.com",
+          phone: "+5511888888888",
+          description: "Issue with billing",
+          attachments: [
+            {
+              filename: "screenshot.png",
+              contentType: "image/png",
+              content: "aGVsbG8gd29ybGQ=",
+            },
+          ],
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain("screenshot.png");
+      expect(response.body.error).toContain("unrelated");
+    });
+
+    it("returns 503 when OPENAI_API_KEY is not set and an image attachment is sent", async () => {
+      delete process.env.OPENAI_API_KEY;
+      const org = await createOrganization("Acme Corp", "acme-corp");
+
+      const response = await request(app)
+        .post(`/api/public/${org.slug}/tickets`)
+        .send({
+          name: "Jane Doe",
+          email: "jane@example.com",
+          phone: "+5511888888888",
+          description: "Screenshot attached",
+          attachments: [
+            {
+              filename: "screenshot.png",
+              contentType: "image/png",
+              content: "aGVsbG8gd29ybGQ=",
+            },
+          ],
+        });
+
+      expect(response.status).toBe(503);
+      expect(response.body.error).toBe("OpenAI API key is not configured");
+    });
+
+    it("returns 502 when OpenAI returns an error for image validation", async () => {
+      const org = await createOrganization("Acme Corp", "acme-corp");
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        json: async () => ({ error: { message: "Rate limit" } }),
+      }) as unknown as typeof fetch;
+
+      const response = await request(app)
+        .post(`/api/public/${org.slug}/tickets`)
+        .send({
+          name: "Jane Doe",
+          email: "jane@example.com",
+          phone: "+5511888888888",
+          description: "Screenshot attached",
+          attachments: [
+            {
+              filename: "screenshot.png",
+              contentType: "image/png",
+              content: "aGVsbG8gd29ybGQ=",
+            },
+          ],
+        });
+
+      expect(response.status).toBe(502);
+      expect(response.body.error).toBe("Classification request was rejected");
     });
 
     it("returns 400 when name is missing", async () => {

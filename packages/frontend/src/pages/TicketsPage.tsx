@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { TicketSummary } from "@/types/types";
+import type { TicketSentiment, TicketSummary } from "@/types/types";
 
 type StatusFilter = "all" | "new" | "assigned" | "closed";
 
@@ -40,6 +40,37 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function ListSentimentBadge({
+  sentiment,
+  labelPositive,
+  labelNeutral,
+  labelNegative,
+}: {
+  sentiment: TicketSentiment | null;
+  labelPositive: string;
+  labelNeutral: string;
+  labelNegative: string;
+}) {
+  if (!sentiment) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+  const labels: Record<TicketSentiment, string> = {
+    positive: labelPositive,
+    neutral: labelNeutral,
+    negative: labelNegative,
+  };
+  const styles: Record<TicketSentiment, string> = {
+    positive: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border-emerald-500/25",
+    neutral: "bg-muted text-muted-foreground border-border",
+    negative: "bg-destructive/10 text-destructive border-destructive/20",
+  };
+  return (
+    <span className={`inline-flex max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-xs ${styles[sentiment]}`}>
+      {labels[sentiment]}
+    </span>
+  );
+}
+
 function TicketsPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -61,6 +92,11 @@ function TicketsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [orgSlug, setOrgSlug] = useState<string | null>(null);
+  const [classifyingTicketId, setClassifyingTicketId] = useState<number | null>(null);
+  const [classifyingSentimentTicketId, setClassifyingSentimentTicketId] = useState<number | null>(null);
+  const [classifyError, setClassifyError] = useState<string | null>(null);
+
+  const classifyBusy = classifyingTicketId !== null || classifyingSentimentTicketId !== null;
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total]);
 
@@ -156,6 +192,65 @@ function TicketsPage() {
     setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
 
+  const handleClassifyType = async (ticket: TicketSummary) => {
+    setClassifyError(null);
+    setClassifyingTicketId(ticket.id);
+    try {
+      const response = await fetch(`/api/tickets/${ticket.id}/classify-ticket-type`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string; ticketTypeName?: string };
+      if (!response.ok) {
+        throw new Error(data.error ?? t("tickets.classifyTypeError"));
+      }
+      const ticketTypeName = data.ticketTypeName;
+      if (typeof ticketTypeName !== "string") {
+        throw new Error(t("tickets.classifyTypeError"));
+      }
+      setTickets((prev) =>
+        prev.map((row) =>
+          row.id === ticket.id ? { ...row, ticketTypeName } : row,
+        ),
+      );
+    } catch (error) {
+      setClassifyError(
+        error instanceof Error ? error.message : t("tickets.classifyTypeError"),
+      );
+    } finally {
+      setClassifyingTicketId(null);
+    }
+  };
+
+  const handleClassifySentiment = async (ticket: TicketSummary) => {
+    setClassifyError(null);
+    setClassifyingSentimentTicketId(ticket.id);
+    try {
+      const response = await fetch(`/api/tickets/${ticket.id}/classify-sentiment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string; sentiment?: TicketSentiment };
+      if (!response.ok) {
+        throw new Error(data.error ?? t("ticketDetail.classifySentimentError"));
+      }
+      if (data.sentiment !== "positive" && data.sentiment !== "neutral" && data.sentiment !== "negative") {
+        throw new Error(t("ticketDetail.classifySentimentError"));
+      }
+      setTickets((prev) =>
+        prev.map((row) =>
+          row.id === ticket.id ? { ...row, sentiment: data.sentiment! } : row,
+        ),
+      );
+    } catch (error) {
+      setClassifyError(
+        error instanceof Error ? error.message : t("ticketDetail.classifySentimentError"),
+      );
+    } finally {
+      setClassifyingSentimentTicketId(null);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -207,6 +302,28 @@ function TicketsPage() {
         </div>
       </div>
 
+      {classifyError ? (
+        <div
+          className="flex items-center gap-2.5 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+          role="alert"
+        >
+          <svg
+            className="h-4 w-4 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" x2="12" y1="8" y2="12" />
+            <line x1="12" x2="12.01" y1="16" y2="16" />
+          </svg>
+          {classifyError}
+        </div>
+      ) : null}
+
       {loadError ? (
         <div
           className="flex items-center gap-2.5 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
@@ -236,6 +353,8 @@ function TicketsPage() {
               <TableHead>{t("tickets.code")}</TableHead>
               <TableHead>{t("tickets.customer")}</TableHead>
               <TableHead>{t("common.type")}</TableHead>
+              <TableHead>{t("tickets.sentiment")}</TableHead>
+              <TableHead className="w-[1%] whitespace-nowrap">{t("common.actions")}</TableHead>
               <TableHead>{t("common.status")}</TableHead>
               <TableHead>{t("ticketDetail.assignee")}</TableHead>
               <TableHead>{t("common.created")}</TableHead>
@@ -259,6 +378,88 @@ function TicketsPage() {
                 <TableCell>{ticket.name}</TableCell>
                 <TableCell className="text-muted-foreground">
                   {ticket.ticketTypeName ?? "-"}
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                    <ListSentimentBadge
+                      labelNegative={t("ticketDetail.sentimentNegative")}
+                      labelNeutral={t("ticketDetail.sentimentNeutral")}
+                      labelPositive={t("ticketDetail.sentimentPositive")}
+                      sentiment={ticket.sentiment}
+                    />
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-1 px-2"
+                      disabled={classifyBusy}
+                      aria-label={t("tickets.classifyTypeAria")}
+                      onClick={() => void handleClassifyType(ticket)}
+                    >
+                      {classifyingTicketId === ticket.id ? (
+                        <>
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+                          <span className="sr-only">{t("tickets.classifyingType")}</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                            aria-hidden
+                          >
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                            <path d="M19 3v4M21 5h-4" />
+                          </svg>
+                          <span aria-hidden>{t("tickets.classifyTypeShort")}</span>
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-1 px-2"
+                      disabled={classifyBusy}
+                      aria-label={t("ticketDetail.classifySentimentAria")}
+                      onClick={() => void handleClassifySentiment(ticket)}
+                    >
+                      {classifyingSentimentTicketId === ticket.id ? (
+                        <>
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+                          <span className="sr-only">{t("ticketDetail.classifyingSentiment")}</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                            aria-hidden
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                            <line x1="9" x2="9.01" y1="9" y2="9" />
+                            <line x1="15" x2="15.01" y1="9" y2="9" />
+                          </svg>
+                          <span aria-hidden>{t("ticketDetail.classifySentimentShort")}</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </TableCell>
                 <TableCell>
                   <StatusBadge status={ticket.status} />

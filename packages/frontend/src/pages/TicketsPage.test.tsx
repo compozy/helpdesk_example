@@ -19,7 +19,11 @@ function mockFetchForTickets(ticketsBody: unknown, status = 200) {
     if (url.includes("/api/organizations/current")) {
       return createJsonResponse(orgResponse);
     }
-    return createJsonResponse(ticketsBody, status);
+    const payload =
+      Array.isArray(ticketsBody)
+        ? { data: ticketsBody, total: ticketsBody.length }
+        : ticketsBody;
+    return createJsonResponse(payload, status);
   });
 }
 
@@ -39,27 +43,30 @@ const sampleTickets = [
   {
     id: 1,
     code: "TK-ABC12345",
-    status: "new",
+    status: "new" as const,
     name: "John Doe",
     ticketTypeName: "Bug",
+    sentiment: null,
     assignedToName: null,
     createdAt: "2026-04-07T10:00:00.000Z",
   },
   {
     id: 2,
     code: "TK-DEF67890",
-    status: "assigned",
+    status: "assigned" as const,
     name: "Jane Smith",
     ticketTypeName: "Feature",
+    sentiment: "neutral",
     assignedToName: "Operator Bob",
     createdAt: "2026-04-06T08:00:00.000Z",
   },
   {
     id: 3,
     code: "TK-GHI11111",
-    status: "closed",
+    status: "closed" as const,
     name: "Alice Brown",
     ticketTypeName: null,
+    sentiment: null,
     assignedToName: "Operator Bob",
     createdAt: "2026-04-05T12:00:00.000Z",
   },
@@ -106,6 +113,8 @@ describe("TicketsPage", () => {
     expect(screen.getByText("Código")).toBeInTheDocument();
     expect(screen.getByText("Cliente")).toBeInTheDocument();
     expect(screen.getByText("Tipo")).toBeInTheDocument();
+    expect(screen.getByText("Sentimento")).toBeInTheDocument();
+    expect(screen.getByText("Ações")).toBeInTheDocument();
     expect(screen.getByText("Status")).toBeInTheDocument();
     expect(screen.getByText("Responsável")).toBeInTheDocument();
     expect(screen.getByText("Criado")).toBeInTheDocument();
@@ -130,40 +139,14 @@ describe("TicketsPage", () => {
     expect(screen.getByText("Nenhum chamado encontrado")).toBeInTheDocument();
   });
 
-  it("filters tickets by status when filter is applied", async () => {
-    mockFetchForTickets(sampleTickets);
-    renderPage();
-
-    await waitFor(() =>
-      expect(screen.queryByText("Carregando chamados...")).not.toBeInTheDocument(),
-    );
-
-    fetchMock.mockResolvedValue(
-      createJsonResponse([sampleTickets[0]]),
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Novo" }));
-
-    await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith("/api/tickets?status=new"),
-    );
-  });
-
-  it("fetches all tickets when 'All' filter is selected", async () => {
-    mockFetchForTickets(sampleTickets);
+  it("fetches tickets with status=new when the URL includes it", async () => {
+    mockFetchForTickets([sampleTickets[0]]);
     renderPage("/tickets?status=new");
 
-    await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith("/api/tickets?status=new"),
-    );
-
-    fetchMock.mockResolvedValue(createJsonResponse(sampleTickets));
-
-    fireEvent.click(screen.getByRole("button", { name: "Todos" }));
-
-    await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith("/api/tickets"),
-    );
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map((c) => String(c[0]));
+      expect(urls.some((u) => u.includes("status=new"))).toBe(true);
+    });
   });
 
   it("highlights tickets with status 'new'", async () => {
@@ -213,7 +196,35 @@ describe("TicketsPage", () => {
     renderPage("/tickets?status=assigned");
 
     await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith("/api/tickets?status=assigned"),
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringMatching(/^\/api\/tickets\?.*\bstatus=assigned\b/),
+      ),
     );
+  });
+
+  it("classifies ticket type and updates the row", async () => {
+    mockFetchForTickets(sampleTickets);
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.queryByText("Carregando chamados...")).not.toBeInTheDocument(),
+    );
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url.includes("/api/organizations/current")) {
+        return createJsonResponse(orgResponse);
+      }
+      if (url.includes("/classify-ticket-type") && init?.method === "POST") {
+        return createJsonResponse({ ticketTypeId: 1, ticketTypeName: "Incident" });
+      }
+      return createJsonResponse({ data: sampleTickets, total: sampleTickets.length });
+    });
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Classificar tipo do chamado com IA" })[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText("Incident")).toBeInTheDocument();
+    });
   });
 });

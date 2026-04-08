@@ -1,5 +1,6 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { db } from "../data/database";
+import { TicketClassifyExternalError } from "../services/ticketClassifyService";
 import { createTicket, getTicketByCode } from "../services/ticketService";
 import { ValidationError, NotFoundError, list as listTicketTypes } from "../services/ticketTypeService";
 
@@ -22,6 +23,11 @@ function sendErrorResponse(error: unknown, res: Response) {
   }
   if (error instanceof NotFoundError) {
     return res.status(404).json({ error: error.message });
+  }
+  if (error instanceof TicketClassifyExternalError) {
+    const message = error.message;
+    const status = message === "OpenAI API key is not configured" ? 503 : 502;
+    return res.status(status).json({ error: message });
   }
   throw error;
 }

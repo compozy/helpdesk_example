@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import type {
   TicketAttachment,
   TicketDetail,
+  TicketSentiment,
   User,
 } from "@/types/types";
 
@@ -47,6 +48,37 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs ${className}`}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+}
+
+function SentimentBadge({
+  sentiment,
+  labelPositive,
+  labelNeutral,
+  labelNegative,
+}: {
+  sentiment: TicketSentiment | null;
+  labelPositive: string;
+  labelNeutral: string;
+  labelNegative: string;
+}) {
+  if (!sentiment) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+  const labels: Record<TicketSentiment, string> = {
+    positive: labelPositive,
+    neutral: labelNeutral,
+    negative: labelNegative,
+  };
+  const styles: Record<TicketSentiment, string> = {
+    positive: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border-emerald-500/25",
+    neutral: "bg-muted text-muted-foreground border-border",
+    negative: "bg-destructive/10 text-destructive border-destructive/20",
+  };
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs ${styles[sentiment]}`}>
+      {labels[sentiment]}
     </span>
   );
 }
@@ -107,6 +139,7 @@ function TicketDetailPage() {
   const [commentFile, setCommentFile] = useState<File | null>(null);
   const [commentError, setCommentError] = useState<string | null>(null);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isClassifyingSentiment, setIsClassifyingSentiment] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadTicket = useCallback(async () => {
@@ -176,6 +209,30 @@ function TicketDetailPage() {
       setActionError(err instanceof Error ? err.message : t("ticketDetail.forwardError"));
     } finally {
       setIsActioning(false);
+    }
+  }
+
+  async function handleClassifySentiment() {
+    if (!id) return;
+    try {
+      setIsClassifyingSentiment(true);
+      setActionError(null);
+      const response = await fetch(`/api/tickets/${id}/classify-sentiment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string; sentiment?: TicketSentiment };
+      if (!response.ok) {
+        throw new Error(data.error ?? t("ticketDetail.classifySentimentError"));
+      }
+      if (data.sentiment !== "positive" && data.sentiment !== "neutral" && data.sentiment !== "negative") {
+        throw new Error(t("ticketDetail.classifySentimentError"));
+      }
+      setTicket((prev) => (prev ? { ...prev, sentiment: data.sentiment! } : null));
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : t("ticketDetail.classifySentimentError"));
+    } finally {
+      setIsClassifyingSentiment(false);
     }
   }
 
@@ -318,6 +375,14 @@ function TicketDetailPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <Button
+            disabled={isActioning || isClassifyingSentiment}
+            onClick={() => void handleClassifySentiment()}
+            size="sm"
+            variant="outline"
+          >
+            {isClassifyingSentiment ? t("ticketDetail.classifyingSentiment") : t("ticketDetail.classifySentiment")}
+          </Button>
           {ticket.status === "new" && (
             <Button
               disabled={isActioning}
@@ -407,6 +472,17 @@ function TicketDetailPage() {
             <div>
               <dt className="text-muted-foreground">{t("common.type")}</dt>
               <dd>{ticket.ticketTypeName ?? "-"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">{t("ticketDetail.sentiment")}</dt>
+              <dd>
+                <SentimentBadge
+                  labelNegative={t("ticketDetail.sentimentNegative")}
+                  labelNeutral={t("ticketDetail.sentimentNeutral")}
+                  labelPositive={t("ticketDetail.sentimentPositive")}
+                  sentiment={ticket.sentiment}
+                />
+              </dd>
             </div>
             <div>
               <dt className="text-muted-foreground">{t("ticketDetail.assignee")}</dt>

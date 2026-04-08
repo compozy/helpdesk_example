@@ -46,12 +46,15 @@ export interface PublicTicketStatus {
   updatedAt: string;
 }
 
+export type TicketSentiment = "positive" | "neutral" | "negative";
+
 export interface TicketSummary {
   id: number;
   code: string;
   status: "new" | "assigned" | "closed";
   name: string;
   ticketTypeName: string | null;
+  sentiment: TicketSentiment | null;
   assignedToName: string | null;
   createdAt: string;
 }
@@ -87,6 +90,7 @@ export interface TicketDetail {
   phone: string;
   description: string;
   ticketTypeName: string | null;
+  sentiment: TicketSentiment | null;
   assignedToName: string | null;
   createdAt: string;
   updatedAt: string;

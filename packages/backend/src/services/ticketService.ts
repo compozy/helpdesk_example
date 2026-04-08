@@ -1,5 +1,6 @@
 import { db } from "../data/database";
 import { generateUniqueCode } from "./ticketCodeService";
+import { validateSupportTicketImages } from "./ticketAttachmentImageValidationService";
 import { ValidationError, NotFoundError } from "./ticketTypeService";
 
 const MAX_BASE64_SIZE = 1_370_000;
@@ -29,6 +30,7 @@ export interface Ticket {
   description: string;
   ticketTypeId: number | null;
   ticketTypeName: string | null;
+  sentiment: string | null;
   assignedToId: number | null;
   assignedToName: string | null;
   organizationId: number;
@@ -42,6 +44,7 @@ export interface TicketListItem {
   status: string;
   name: string;
   ticketTypeName: string | null;
+  sentiment: string | null;
   assignedToName: string | null;
   createdAt: string;
 }
@@ -108,6 +111,7 @@ export async function createTicket(
   const phone = validateRequiredField(input.phone, "Phone");
   const description = validateRequiredField(input.description, "Description");
   validateAttachments(input.attachments);
+  await validateSupportTicketImages(description, input.attachments);
 
   if (input.ticketTypeId !== undefined) {
     const ticketType = await db.oneOrNone<{ id: number }>(
@@ -198,6 +202,7 @@ export async function listTickets(
   const data = await db.manyOrNone<TicketListItem>(
     `SELECT t.id, t.code, t.status, t.name,
            tt.name AS "ticketTypeName",
+           t.sentiment,
            u.name AS "assignedToName",
            t.created_at AS "createdAt"
     FROM tickets t
@@ -219,6 +224,7 @@ export async function getTicketById(
     `SELECT t.id, t.code, t.status, t.name, t.email, t.phone, t.description,
             t.ticket_type_id AS "ticketTypeId",
             tt.name AS "ticketTypeName",
+            t.sentiment,
             t.assigned_to_id AS "assignedToId",
             u.name AS "assignedToName",
             t.organization_id AS "organizationId",

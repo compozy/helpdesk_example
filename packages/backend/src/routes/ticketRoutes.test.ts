@@ -114,6 +114,16 @@ describe("/api/tickets", () => {
       const response = await request(app).post("/api/tickets/1/comments");
       expect(response.status).toBe(401);
     });
+
+    it("POST /api/tickets/:id/classify-ticket-type returns 401 without Authorization header", async () => {
+      const response = await request(app).post("/api/tickets/1/classify-ticket-type");
+      expect(response.status).toBe(401);
+    });
+
+    it("POST /api/tickets/:id/classify-sentiment returns 401 without Authorization header", async () => {
+      const response = await request(app).post("/api/tickets/1/classify-sentiment");
+      expect(response.status).toBe(401);
+    });
   });
 
   describe("GET /api/tickets", () => {
@@ -539,6 +549,233 @@ describe("/api/tickets", () => {
         .post("/api/tickets/999/comments")
         .set("Authorization", `Bearer ${token}`)
         .send({ content: "Comment on missing ticket" });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Ticket not found");
+    });
+  });
+
+  describe("POST /api/tickets/:id/classify-ticket-type", () => {
+    const originalFetch = global.fetch;
+    const originalOpenAiKey = process.env.OPENAI_API_KEY;
+
+    afterEach(() => {
+      global.fetch = originalFetch;
+      process.env.OPENAI_API_KEY = originalOpenAiKey;
+    });
+
+    function mockOpenAiResponse(ticketTypeId: number) {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: "completed",
+          output: [
+            {
+              type: "message",
+              status: "completed",
+              role: "assistant",
+              content: [
+                {
+                  type: "output_text",
+                  text: JSON.stringify({ ticket_type_id: ticketTypeId }),
+                },
+              ],
+            },
+          ],
+        }),
+      }) as unknown as typeof fetch;
+    }
+
+    it("returns 503 when OPENAI_API_KEY is not set", async () => {
+      delete process.env.OPENAI_API_KEY;
+      const org = await createOrganization("Acme Corp");
+      const user = await createUser(org.id, "Operator", "op@test.com");
+      await createTicketType(org.id, "Bug");
+      const ticket = await insertTicket(org.id, "TK-CLS0001");
+      const token = signToken({ userId: user.id, organizationId: org.id, admin: false });
+
+      const response = await request(app)
+        .post(`/api/tickets/${ticket.id}/classify-ticket-type`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(503);
+      expect(response.body.error).toBe("OpenAI API key is not configured");
+    });
+
+    it("returns 400 when organization has no ticket types", async () => {
+      process.env.OPENAI_API_KEY = "test-openai-key";
+      const org = await createOrganization("Acme Corp");
+      const user = await createUser(org.id, "Operator", "op@test.com");
+      const ticket = await insertTicket(org.id, "TK-CLS0002");
+      const token = signToken({ userId: user.id, organizationId: org.id, admin: false });
+
+      const response = await request(app)
+        .post(`/api/tickets/${ticket.id}/classify-ticket-type`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("No ticket types defined for this organization");
+    });
+
+    it("returns 200, persists ticket type, and returns names", async () => {
+      process.env.OPENAI_API_KEY = "test-openai-key";
+      const org = await createOrganization("Acme Corp");
+      const user = await createUser(org.id, "Operator", "op@test.com");
+      const tt = await createTicketType(org.id, "Incident");
+      const ticket = await insertTicket(org.id, "TK-CLS0003", {
+        description: "Production is down",
+      });
+      mockOpenAiResponse(tt.id);
+      const token = signToken({ userId: user.id, organizationId: org.id, admin: false });
+
+      const response = await request(app)
+        .post(`/api/tickets/${ticket.id}/classify-ticket-type`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        ticketTypeId: tt.id,
+        ticketTypeName: "Incident",
+      });
+
+      const row = await testDb.one<{ ticket_type_id: number | null }>(
+        "SELECT ticket_type_id FROM tickets WHERE id = $1",
+        [ticket.id],
+      );
+      expect(row.ticket_type_id).toBe(tt.id);
+      expect(global.fetch).toHaveBeenCalledWith(
+        "https://api.openai.com/v1/responses",
+        expect.objectContaining({
+          method: "POST",
+          headers: expect.objectContaining({
+            Authorization: "Bearer test-openai-key",
+          }),
+        }),
+      );
+    });
+
+    it("returns 502 when OpenAI returns an error status", async () => {
+      process.env.OPENAI_API_KEY = "test-openai-key";
+      const org = await createOrganization("Acme Corp");
+      const user = await createUser(org.id, "Operator", "op@test.com");
+      await createTicketType(org.id, "Bug");
+      const ticket = await insertTicket(org.id, "TK-CLS0004");
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        json: async () => ({ error: { message: "Rate limit" } }),
+      }) as unknown as typeof fetch;
+      const token = signToken({ userId: user.id, organizationId: org.id, admin: false });
+
+      const response = await request(app)
+        .post(`/api/tickets/${ticket.id}/classify-ticket-type`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(502);
+      expect(response.body.error).toBe("Classification request was rejected");
+    });
+
+    it("returns 404 for a ticket in another organization", async () => {
+      process.env.OPENAI_API_KEY = "test-openai-key";
+      const orgA = await createOrganization("Org A");
+      const orgB = await createOrganization("Org B");
+      const userA = await createUser(orgA.id, "Op A", "a@test.com");
+      await createUser(orgB.id, "Op B", "b@test.com");
+      await createTicketType(orgB.id, "Other");
+      const ticketB = await insertTicket(orgB.id, "TK-CLS0005");
+      const token = signToken({ userId: userA.id, organizationId: orgA.id, admin: false });
+
+      const response = await request(app)
+        .post(`/api/tickets/${ticketB.id}/classify-ticket-type`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Ticket not found");
+    });
+  });
+
+  describe("POST /api/tickets/:id/classify-sentiment", () => {
+    const originalFetch = global.fetch;
+    const originalOpenAiKey = process.env.OPENAI_API_KEY;
+
+    afterEach(() => {
+      global.fetch = originalFetch;
+      process.env.OPENAI_API_KEY = originalOpenAiKey;
+    });
+
+    function mockOpenAiSentiment(sentiment: string) {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: "completed",
+          output: [
+            {
+              type: "message",
+              status: "completed",
+              role: "assistant",
+              content: [
+                {
+                  type: "output_text",
+                  text: JSON.stringify({ sentiment }),
+                },
+              ],
+            },
+          ],
+        }),
+      }) as unknown as typeof fetch;
+    }
+
+    it("returns 503 when OPENAI_API_KEY is not set", async () => {
+      delete process.env.OPENAI_API_KEY;
+      const org = await createOrganization("Acme Corp");
+      const user = await createUser(org.id, "Operator", "op@test.com");
+      const ticket = await insertTicket(org.id, "TK-SEN0001");
+      const token = signToken({ userId: user.id, organizationId: org.id, admin: false });
+
+      const response = await request(app)
+        .post(`/api/tickets/${ticket.id}/classify-sentiment`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(503);
+      expect(response.body.error).toBe("OpenAI API key is not configured");
+    });
+
+    it("returns 200, persists sentiment, and returns value", async () => {
+      process.env.OPENAI_API_KEY = "test-openai-key";
+      const org = await createOrganization("Acme Corp");
+      const user = await createUser(org.id, "Operator", "op@test.com");
+      const ticket = await insertTicket(org.id, "TK-SEN0002", {
+        description: "Thanks for the quick help!",
+      });
+      mockOpenAiSentiment("positive");
+      const token = signToken({ userId: user.id, organizationId: org.id, admin: false });
+
+      const response = await request(app)
+        .post(`/api/tickets/${ticket.id}/classify-sentiment`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ sentiment: "positive" });
+
+      const row = await testDb.one<{ sentiment: string | null }>(
+        "SELECT sentiment FROM tickets WHERE id = $1",
+        [ticket.id],
+      );
+      expect(row.sentiment).toBe("positive");
+    });
+
+    it("returns 404 for a ticket in another organization", async () => {
+      process.env.OPENAI_API_KEY = "test-openai-key";
+      const orgA = await createOrganization("Org A Sen");
+      const orgB = await createOrganization("Org B Sen");
+      const userA = await createUser(orgA.id, "Op A", "a2@test.com");
+      await createUser(orgB.id, "Op B", "b2@test.com");
+      const ticketB = await insertTicket(orgB.id, "TK-SEN0003");
+      const token = signToken({ userId: userA.id, organizationId: orgA.id, admin: false });
+
+      const response = await request(app)
+        .post(`/api/tickets/${ticketB.id}/classify-sentiment`)
+        .set("Authorization", `Bearer ${token}`);
 
       expect(response.status).toBe(404);
       expect(response.body.error).toBe("Ticket not found");

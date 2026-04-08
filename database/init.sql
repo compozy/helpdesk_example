@@ -47,7 +47,9 @@ CREATE TABLE IF NOT EXISTS tickets (
   phone VARCHAR(50) NOT NULL,
   description TEXT NOT NULL,
   ticket_type_id INTEGER REFERENCES ticket_types(id),
+  sentiment VARCHAR(20) NULL,
   assigned_to_id INTEGER REFERENCES users(id),
+  CONSTRAINT tickets_sentiment_check CHECK (sentiment IS NULL OR sentiment IN ('positive', 'neutral', 'negative')),
   organization_id INTEGER NOT NULL REFERENCES organizations(id),
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()

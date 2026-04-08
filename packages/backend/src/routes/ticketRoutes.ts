@@ -11,6 +11,11 @@ import {
   getTicketById,
   listTickets,
 } from "../services/ticketService";
+import {
+  classifyAndPersistSentiment,
+  classifyAndPersistTicketType,
+  TicketClassifyExternalError,
+} from "../services/ticketClassifyService";
 import { ValidationError, NotFoundError } from "../services/ticketTypeService";
 
 export const ticketRoutes = Router();
@@ -30,6 +35,11 @@ function sendErrorResponse(error: unknown, res: Response) {
   }
   if (error instanceof NotFoundError) {
     return res.status(404).json({ error: error.message });
+  }
+  if (error instanceof TicketClassifyExternalError) {
+    const message = error.message;
+    const status = message === "OpenAI API key is not configured" ? 503 : 502;
+    return res.status(status).json({ error: message });
   }
   throw error;
 }
@@ -53,6 +63,42 @@ ticketRoutes.get("/", async (req: Request, res: Response, next: NextFunction) =>
     next(error);
   }
 });
+
+ticketRoutes.post(
+  "/:id/classify-ticket-type",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { organizationId } = (req as AuthenticatedRequest).user;
+      const ticketId = parseId(req.params.id as string);
+      const result = await classifyAndPersistTicketType(ticketId, organizationId);
+      res.status(200).json(result);
+    } catch (error) {
+      try {
+        sendErrorResponse(error, res);
+      } catch (unhandledError) {
+        next(unhandledError);
+      }
+    }
+  },
+);
+
+ticketRoutes.post(
+  "/:id/classify-sentiment",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { organizationId } = (req as AuthenticatedRequest).user;
+      const ticketId = parseId(req.params.id as string);
+      const result = await classifyAndPersistSentiment(ticketId, organizationId);
+      res.status(200).json(result);
+    } catch (error) {
+      try {
+        sendErrorResponse(error, res);
+      } catch (unhandledError) {
+        next(unhandledError);
+      }
+    }
+  },
+);
 
 ticketRoutes.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {

@@ -32,6 +32,7 @@ const sampleTicket = {
   phone: "+5511999999999",
   description: "I need help with my account.",
   ticketTypeName: "Bug",
+  sentiment: null,
   assignedToName: null,
   createdAt: "2026-04-07T10:00:00.000Z",
   updatedAt: "2026-04-07T10:00:00.000Z",
