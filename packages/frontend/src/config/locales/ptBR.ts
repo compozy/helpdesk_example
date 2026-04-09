@@ -257,6 +257,12 @@ const ptBR = {
     ticketsByType: "Chamados por Tipo",
     loadError: "N\u00e3o foi poss\u00edvel carregar as m\u00e9tricas do painel. Por favor, tente novamente.",
   },
+  chat: {
+    openChat: "Assistente IA",
+    title: "Assistente IA",
+    description: "Fa\u00e7a perguntas sobre seus chamados e m\u00e9tricas.",
+    placeholder: "Pergunte sobre chamados...",
+  },
   auth: {
     useAuthError: "useAuth deve ser usado dentro de um AuthProvider",
     signInError: "N\u00e3o foi poss\u00edvel fazer login.",

@@ -11,6 +11,7 @@ import { organizationRoutes } from "./routes/organizationRoutes";
 import { publicTicketRoutes } from "./routes/publicTicketRoutes";
 import { ticketRoutes } from "./routes/ticketRoutes";
 import { ticketTypeRoutes } from "./routes/ticketTypeRoutes";
+import { chatRoutes } from "./routes/chatRoutes";
 import { dashboardRoutes } from "./routes/dashboardRoutes";
 import { userRoutes } from "./routes/userRoutes";
 
@@ -24,6 +25,7 @@ app.use("/api/organizations", organizationRoutes);
 app.use("/api/ticket-types", ticketTypeRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/public", publicTicketRoutes);
 

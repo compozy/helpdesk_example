@@ -257,6 +257,12 @@ const en = {
     ticketsByType: "Tickets by Type",
     loadError: "Unable to load dashboard metrics. Please try again.",
   },
+  chat: {
+    openChat: "AI Assistant",
+    title: "AI Assistant",
+    description: "Ask questions about your tickets and metrics.",
+    placeholder: "Ask about tickets...",
+  },
   auth: {
     useAuthError: "useAuth must be used within an AuthProvider",
     signInError: "Unable to sign in.",

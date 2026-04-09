@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { TicketSentiment, TicketSummary } from "@/types/types";
+import ChatAssistant from "@/components/ChatAssistant";
 
 type StatusFilter = "all" | "new" | "assigned" | "closed";
 
@@ -260,24 +261,27 @@ function TicketsPage() {
             {t("tickets.description")}
           </p>
         </div>
-        {orgSlug && (
-          <Button
-            onClick={() => window.open(`/${orgSlug}/tickets/new`, "_blank")}
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
+        <div className="flex gap-2">
+          <ChatAssistant />
+          {orgSlug && (
+            <Button
+              onClick={() => window.open(`/${orgSlug}/tickets/new`, "_blank")}
             >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            {t("tickets.newTicket")}
-          </Button>
-        )}
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              {t("tickets.newTicket")}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
