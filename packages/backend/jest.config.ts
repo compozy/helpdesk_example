@@ -6,6 +6,7 @@ const config: Config = {
   roots: ["<rootDir>/src"],
   collectCoverageFrom: [
     "src/index.ts",
+    "src/agents/**/*.ts",
     "src/data/authMiddleware.ts",
     "src/routes/authRoutes.ts",
     "src/routes/organizationRoutes.ts",

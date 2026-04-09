@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { getImageValidationModel } from "./aiModels";
+import { getImageValidationModel } from "../agents/aiModels";
 import { TicketClassifyExternalError } from "./ticketClassifyService";
 import { ValidationError } from "./ticketTypeService";
 

@@ -33,9 +33,11 @@ const ptBR = {
     emailRequired: "E-mail \u00e9 obrigat\u00f3rio",
     passwordRequired: "Senha \u00e9 obrigat\u00f3ria",
     passwordMinLength: "A senha deve ter pelo menos 8 caracteres",
-    passwordConfirmationRequired: "Confirma\u00e7\u00e3o de senha \u00e9 obrigat\u00f3ria",
+    passwordConfirmationRequired:
+      "Confirma\u00e7\u00e3o de senha \u00e9 obrigat\u00f3ria",
     passwordsDoNotMatch: "As senhas n\u00e3o coincidem",
-    organizationNameRequired: "Nome da organiza\u00e7\u00e3o \u00e9 obrigat\u00f3rio",
+    organizationNameRequired:
+      "Nome da organiza\u00e7\u00e3o \u00e9 obrigat\u00f3rio",
     descriptionRequired: "Descri\u00e7\u00e3o \u00e9 obrigat\u00f3ria",
     phoneRequired: "Telefone \u00e9 obrigat\u00f3rio",
   },
@@ -53,7 +55,8 @@ const ptBR = {
   signin: {
     badge: "Entrar",
     title: "Bem-vindo de volta",
-    subtitle: "Acesse o workspace da sua organiza\u00e7\u00e3o com seu e-mail e senha.",
+    subtitle:
+      "Acesse o workspace da sua organiza\u00e7\u00e3o com seu e-mail e senha.",
     emailPlaceholder: "jane@acme.com",
     passwordPlaceholder: "Digite sua senha",
     invalidCredentials: "Credenciais inv\u00e1lidas",
@@ -69,7 +72,8 @@ const ptBR = {
   signup: {
     badge: "Cadastro",
     title: "Criar uma nova organiza\u00e7\u00e3o",
-    subtitle: "Configure seu workspace e a conta de administrador em um \u00fanico passo.",
+    subtitle:
+      "Configure seu workspace e a conta de administrador em um \u00fanico passo.",
     organizationNameLabel: "Nome da organiza\u00e7\u00e3o",
     organizationNamePlaceholder: "Acme Suporte",
     adminNameLabel: "Nome do administrador",
@@ -78,19 +82,22 @@ const ptBR = {
     passwordPlaceholder: "Pelo menos 8 caracteres",
     confirmPasswordLabel: "Confirmar senha",
     confirmPasswordPlaceholder: "Repita sua senha",
-    unableToCreate: "N\u00e3o foi poss\u00edvel criar sua organiza\u00e7\u00e3o.",
+    unableToCreate:
+      "N\u00e3o foi poss\u00edvel criar sua organiza\u00e7\u00e3o.",
     submitting: "Criando organiza\u00e7\u00e3o...",
     submit: "Criar organiza\u00e7\u00e3o",
     alreadyHaveAccount: "J\u00e1 tem uma conta?",
     signIn: "Entrar",
     workspaceBadge: "Configura\u00e7\u00e3o do workspace",
-    workspaceTitle: "Crie sua organiza\u00e7\u00e3o e convide seu primeiro admin depois.",
+    workspaceTitle:
+      "Crie sua organiza\u00e7\u00e3o e convide seu primeiro admin depois.",
     workspaceDescription:
       "Comece com um workspace \u00fanico, acesso seguro e uma transi\u00e7\u00e3o limpa para o painel autenticado.",
   },
   users: {
     title: "Usu\u00e1rios",
-    description: "Gerencie os usu\u00e1rios da sua organiza\u00e7\u00e3o. Adicione novos membros ou remova os existentes.",
+    description:
+      "Gerencie os usu\u00e1rios da sua organiza\u00e7\u00e3o. Adicione novos membros ou remova os existentes.",
     newUser: "Novo Usu\u00e1rio",
     createUser: "Criar Usu\u00e1rio",
     namePlaceholder: "Nome",
@@ -101,22 +108,29 @@ const ptBR = {
     role: "Perfil",
     deleteUserTitle: "Excluir usu\u00e1rio?",
     deleteUserDescription:
-      "Isso remover\u00e1 permanentemente \"{{name}}\" ({{email}}) da sua organiza\u00e7\u00e3o.",
-    loadError: "N\u00e3o foi poss\u00edvel carregar os usu\u00e1rios. Por favor, tente novamente.",
-    createError: "N\u00e3o foi poss\u00edvel criar o usu\u00e1rio. Por favor, tente novamente.",
-    deleteError: "N\u00e3o foi poss\u00edvel excluir o usu\u00e1rio. Por favor, tente novamente.",
+      'Isso remover\u00e1 permanentemente "{{name}}" ({{email}}) da sua organiza\u00e7\u00e3o.',
+    loadError:
+      "N\u00e3o foi poss\u00edvel carregar os usu\u00e1rios. Por favor, tente novamente.",
+    createError:
+      "N\u00e3o foi poss\u00edvel criar o usu\u00e1rio. Por favor, tente novamente.",
+    deleteError:
+      "N\u00e3o foi poss\u00edvel excluir o usu\u00e1rio. Por favor, tente novamente.",
     loadingUsers: "Carregando usu\u00e1rios...",
     noUsersYet: "Nenhum usu\u00e1rio ainda",
-    noUsersDescription: "Clique em \"Novo Usu\u00e1rio\" para adicionar um membro \u00e0 sua organiza\u00e7\u00e3o.",
+    noUsersDescription:
+      'Clique em "Novo Usu\u00e1rio" para adicionar um membro \u00e0 sua organiza\u00e7\u00e3o.',
   },
   organizationSettings: {
     title: "Configura\u00e7\u00f5es da Organiza\u00e7\u00e3o",
-    description: "Visualize e atualize os detalhes da sua organiza\u00e7\u00e3o.",
+    description:
+      "Visualize e atualize os detalhes da sua organiza\u00e7\u00e3o.",
     organizationName: "Nome da Organiza\u00e7\u00e3o",
-    loadError: "N\u00e3o foi poss\u00edvel carregar a organiza\u00e7\u00e3o. Por favor, tente novamente.",
+    loadError:
+      "N\u00e3o foi poss\u00edvel carregar a organiza\u00e7\u00e3o. Por favor, tente novamente.",
     loadingOrganization: "Carregando organiza\u00e7\u00e3o...",
     updateSuccess: "Nome da organiza\u00e7\u00e3o atualizado com sucesso.",
-    saveError: "N\u00e3o foi poss\u00edvel salvar o nome da organiza\u00e7\u00e3o. Por favor, tente novamente.",
+    saveError:
+      "N\u00e3o foi poss\u00edvel salvar o nome da organiza\u00e7\u00e3o. Por favor, tente novamente.",
   },
   ticketTypes: {
     title: "Tipos de Chamado",
@@ -126,21 +140,27 @@ const ptBR = {
     namePlaceholder: "Nome do tipo de chamado",
     nameMaxLength: "O nome deve ter no m\u00e1ximo 50 caracteres",
     descriptionPlaceholder: "Descri\u00e7\u00e3o opcional",
-    descriptionMaxLength: "A descri\u00e7\u00e3o deve ter no m\u00e1ximo 255 caracteres",
-    loadError: "N\u00e3o foi poss\u00edvel carregar os tipos de chamado. Por favor, tente novamente.",
-    saveError: "N\u00e3o foi poss\u00edvel salvar o tipo de chamado. Por favor, tente novamente.",
+    descriptionMaxLength:
+      "A descri\u00e7\u00e3o deve ter no m\u00e1ximo 255 caracteres",
+    loadError:
+      "N\u00e3o foi poss\u00edvel carregar os tipos de chamado. Por favor, tente novamente.",
+    saveError:
+      "N\u00e3o foi poss\u00edvel salvar o tipo de chamado. Por favor, tente novamente.",
     deleteTitle: "Excluir tipo de chamado?",
     deleteDescription:
-      "Isso remover\u00e1 permanentemente \"{{name}}\" das categorias de chamado dispon\u00edveis.",
-    deleteError: "N\u00e3o foi poss\u00edvel excluir o tipo de chamado. Por favor, tente novamente.",
+      'Isso remover\u00e1 permanentemente "{{name}}" das categorias de chamado dispon\u00edveis.',
+    deleteError:
+      "N\u00e3o foi poss\u00edvel excluir o tipo de chamado. Por favor, tente novamente.",
     loadingTicketTypes: "Carregando tipos de chamado...",
     noTicketTypesYet: "Nenhum tipo de chamado ainda",
-    noTicketTypesDescription: "Clique em \"Novo Tipo\" para criar sua primeira categoria.",
+    noTicketTypesDescription:
+      'Clique em "Novo Tipo" para criar sua primeira categoria.',
   },
   ticketDetail: {
     loadingTicket: "Carregando chamado...",
     ticketNotFound: "Chamado n\u00e3o encontrado",
-    loadError: "N\u00e3o foi poss\u00edvel carregar o chamado. Por favor, tente novamente.",
+    loadError:
+      "N\u00e3o foi poss\u00edvel carregar o chamado. Por favor, tente novamente.",
     backToTickets: "Voltar para chamados",
     breadcrumbTickets: "Chamados",
     openedBy: "Aberto por {{name}} em {{date}}",
@@ -176,36 +196,43 @@ const ptBR = {
     classifySentimentShort: "S",
     classifySentimentAria: "Classificar sentimento do cliente com IA",
     classifyingSentiment: "Classificando sentimento...",
-    classifySentimentError: "N\u00e3o foi poss\u00edvel classificar o sentimento.",
+    classifySentimentError:
+      "N\u00e3o foi poss\u00edvel classificar o sentimento.",
   },
   tickets: {
     title: "Chamados",
-    description: "Visualize e gerencie todos os chamados de suporte da sua organiza\u00e7\u00e3o.",
+    description:
+      "Visualize e gerencie todos os chamados de suporte da sua organiza\u00e7\u00e3o.",
     all: "Todos",
     new: "Novo",
     assigned: "Atribu\u00eddo",
     closed: "Fechado",
     code: "C\u00f3digo",
     customer: "Cliente",
-    loadError: "N\u00e3o foi poss\u00edvel carregar os chamados. Por favor, tente novamente.",
+    loadError:
+      "N\u00e3o foi poss\u00edvel carregar os chamados. Por favor, tente novamente.",
     loadingTickets: "Carregando chamados...",
     noTicketsFound: "Nenhum chamado encontrado",
-    noTicketsDescription: "N\u00e3o h\u00e1 chamados correspondentes ao filtro atual.",
+    noTicketsDescription:
+      "N\u00e3o h\u00e1 chamados correspondentes ao filtro atual.",
     newTicket: "Novo Chamado",
-    searchPlaceholder: "Buscar por nome, email, telefone ou descri\u00e7\u00e3o...",
+    searchPlaceholder:
+      "Buscar por nome, email, telefone ou descri\u00e7\u00e3o...",
     showingResults: "Exibindo {{from}}-{{to}} de {{total}} resultados",
     previous: "Anterior",
     next: "Pr\u00f3ximo",
     classifyTypeShort: "IA",
     classifyTypeAria: "Classificar tipo do chamado com IA",
     classifyingType: "Classificando...",
-    classifyTypeError: "N\u00e3o foi poss\u00edvel classificar o tipo do chamado.",
+    classifyTypeError:
+      "N\u00e3o foi poss\u00edvel classificar o tipo do chamado.",
     sentiment: "Sentimento",
   },
   publicTicket: {
     supportBadge: "Suporte",
     title: "Enviar um chamado",
-    subtitle: "Preencha os detalhes abaixo e retornaremos o mais breve poss\u00edvel.",
+    subtitle:
+      "Preencha os detalhes abaixo e retornaremos o mais breve poss\u00edvel.",
     namePlaceholder: "Seu nome completo",
     emailPlaceholder: "seu@email.com",
     phonePlaceholder: "+55 11 99999-9999",
@@ -214,12 +241,13 @@ const ptBR = {
     descriptionPlaceholder: "Descreva seu problema em detalhes...",
     attachmentsLabel: "Anexos (opcional)",
     maxFileSize: "M\u00e1x 1MB por arquivo",
-    fileSizeError: "O arquivo \"{{name}}\" excede o limite de 1MB",
+    fileSizeError: 'O arquivo "{{name}}" excede o limite de 1MB',
     submitting: "Enviando...",
     submit: "Enviar chamado",
     createdBadge: "Chamado criado",
     createdTitle: "Seu chamado foi enviado",
-    createdDescription: "Salve o c\u00f3digo abaixo para acompanhar o status da sua solicita\u00e7\u00e3o.",
+    createdDescription:
+      "Salve o c\u00f3digo abaixo para acompanhar o status da sua solicita\u00e7\u00e3o.",
     trackTicket: "Acompanhar seu chamado",
     backToTickets: "Voltar para chamados",
   },
@@ -230,7 +258,8 @@ const ptBR = {
     ticketCodeLabel: "C\u00f3digo do chamado",
     ticketCodePlaceholder: "TK-XXXXXXXX",
     emptyCodeError: "Por favor, digite o c\u00f3digo do chamado",
-    notFoundError: "Chamado n\u00e3o encontrado. Verifique o c\u00f3digo e tente novamente.",
+    notFoundError:
+      "Chamado n\u00e3o encontrado. Verifique o c\u00f3digo e tente novamente.",
     ticketTitle: "Chamado {{code}}",
     statusNew: "Novo",
     statusAssigned: "Atribu\u00eddo",
@@ -241,7 +270,8 @@ const ptBR = {
   },
   dashboard: {
     title: "Painel",
-    description: "Vis\u00e3o geral em tempo real das suas opera\u00e7\u00f5es de suporte.",
+    description:
+      "Vis\u00e3o geral em tempo real das suas opera\u00e7\u00f5es de suporte.",
     openTickets: "Chamados Abertos",
     unassignedTickets: "Chamados N\u00e3o Atribu\u00eddos",
     oldestWaitingTicket: "Chamado Mais Antigo em Espera",
@@ -249,13 +279,15 @@ const ptBR = {
     avgResolutionTime: "Tempo M\u00e9dio de Resolu\u00e7\u00e3o",
     newToday: "Novos Chamados Hoje",
     trends: "Tend\u00eancias",
-    noTrendData: "Nenhum dado de tend\u00eancia dispon\u00edvel para o per\u00edodo selecionado.",
+    noTrendData:
+      "Nenhum dado de tend\u00eancia dispon\u00edvel para o per\u00edodo selecionado.",
     ticketVolume: "Volume de Chamados ao Longo do Tempo",
     ticketsLabel: "Chamados",
     resolutionTimeTrend: "Tend\u00eancia de Tempo de Resolu\u00e7\u00e3o",
     avgResolution: "Resolu\u00e7\u00e3o M\u00e9dia",
     ticketsByType: "Chamados por Tipo",
-    loadError: "N\u00e3o foi poss\u00edvel carregar as m\u00e9tricas do painel. Por favor, tente novamente.",
+    loadError:
+      "N\u00e3o foi poss\u00edvel carregar as m\u00e9tricas do painel. Por favor, tente novamente.",
   },
   chat: {
     openChat: "Assistente IA",
@@ -266,7 +298,8 @@ const ptBR = {
   auth: {
     useAuthError: "useAuth deve ser usado dentro de um AuthProvider",
     signInError: "N\u00e3o foi poss\u00edvel fazer login.",
-    sessionRestoreError: "N\u00e3o foi poss\u00edvel restaurar a sess\u00e3o autenticada.",
+    sessionRestoreError:
+      "N\u00e3o foi poss\u00edvel restaurar a sess\u00e3o autenticada.",
   },
 };
 

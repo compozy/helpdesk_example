@@ -53,7 +53,8 @@ const en = {
   signin: {
     badge: "Sign in",
     title: "Welcome back",
-    subtitle: "Access your organization workspace with your email and password.",
+    subtitle:
+      "Access your organization workspace with your email and password.",
     emailPlaceholder: "jane@acme.com",
     passwordPlaceholder: "Enter your password",
     invalidCredentials: "Invalid credentials",
@@ -84,13 +85,15 @@ const en = {
     alreadyHaveAccount: "Already have an account?",
     signIn: "Sign in",
     workspaceBadge: "Workspace setup",
-    workspaceTitle: "Create your organization and invite your first admin later.",
+    workspaceTitle:
+      "Create your organization and invite your first admin later.",
     workspaceDescription:
       "Start with a single workspace, secure access, and a clean handoff into the authenticated dashboard.",
   },
   users: {
     title: "Users",
-    description: "Manage the users in your organization. Add new members or remove existing ones.",
+    description:
+      "Manage the users in your organization. Add new members or remove existing ones.",
     newUser: "New User",
     createUser: "Create User",
     namePlaceholder: "Name",
@@ -107,7 +110,8 @@ const en = {
     deleteError: "Unable to delete user. Please try again.",
     loadingUsers: "Loading users...",
     noUsersYet: "No users yet",
-    noUsersDescription: 'Click "New User" to add a member to your organization.',
+    noUsersDescription:
+      'Click "New User" to add a member to your organization.',
   },
   organizationSettings: {
     title: "Organization Settings",
@@ -205,7 +209,8 @@ const en = {
   publicTicket: {
     supportBadge: "Support",
     title: "Submit a ticket",
-    subtitle: "Fill in the details below and we will get back to you as soon as possible.",
+    subtitle:
+      "Fill in the details below and we will get back to you as soon as possible.",
     namePlaceholder: "Your full name",
     emailPlaceholder: "your@email.com",
     phonePlaceholder: "+55 11 99999-9999",
@@ -219,7 +224,8 @@ const en = {
     submit: "Submit ticket",
     createdBadge: "Ticket created",
     createdTitle: "Your ticket has been submitted",
-    createdDescription: "Save the code below to track the status of your request.",
+    createdDescription:
+      "Save the code below to track the status of your request.",
     trackTicket: "Track your ticket",
     backToTickets: "Back to tickets",
   },

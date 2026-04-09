@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { TicketSentiment, TicketSummary } from "@/types/types";
-import ChatAssistant from "@/components/ChatAssistant";
 
 type StatusFilter = "all" | "new" | "assigned" | "closed";
 
@@ -262,7 +261,7 @@ function TicketsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <ChatAssistant />
+          {/* <ChatAssistant /> */}
           {orgSlug && (
             <Button
               onClick={() => window.open(`/${orgSlug}/tickets/new`, "_blank")}
