@@ -1,3 +1,4 @@
+import { generateText } from "ai";
 import {
   addComment,
   assignTicket,
@@ -16,6 +17,14 @@ import {
   truncateTables,
   verifyTestDatabaseConnection,
 } from "../data/testHelper";
+
+jest.mock("ai", () => ({
+  generateText: jest.fn(),
+  Output: {
+    object: jest.fn().mockReturnValue("mocked-object-output"),
+    choice: jest.fn().mockReturnValue("mocked-choice-output"),
+  },
+}));
 
 async function createOrganization(name: string) {
   const slug = name.toLowerCase().replace(/\s+/g, "-");
@@ -48,7 +57,6 @@ const validInput = {
 };
 
 describe("ticketService", () => {
-  const originalFetch = global.fetch;
   const originalOpenAiKey = process.env.OPENAI_API_KEY;
 
   beforeAll(async () => {
@@ -58,31 +66,14 @@ describe("ticketService", () => {
   beforeEach(async () => {
     await truncateTables();
     process.env.OPENAI_API_KEY = "test-openai-key";
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        status: "completed",
-        output: [
-          {
-            type: "message",
-            content: [
-              {
-                type: "output_text",
-                text: JSON.stringify({
-                  valid_for_support_ticket: true,
-                  rejection_reason: "",
-                }),
-              },
-            ],
-          },
-        ],
-      }),
-    }) as unknown as typeof fetch;
+    (generateText as jest.Mock).mockResolvedValue({
+      output: { valid_for_support_ticket: true, rejection_reason: "" },
+    });
   });
 
   afterEach(() => {
-    global.fetch = originalFetch;
     process.env.OPENAI_API_KEY = originalOpenAiKey;
+    (generateText as jest.Mock).mockReset();
   });
 
   afterAll(async () => {

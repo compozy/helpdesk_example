@@ -38,7 +38,11 @@ describe("organizationService", () => {
   it("get() returns the organization by id", async () => {
     const organization = await createOrganization("Acme Org");
 
-    await expect(get(organization.id)).resolves.toEqual(organization);
+    await expect(get(organization.id)).resolves.toEqual({
+      id: organization.id,
+      name: "Acme Org",
+      slug: "acme-org",
+    });
   });
 
   it("get() returns null for a non-existent organization", async () => {
@@ -51,11 +55,13 @@ describe("organizationService", () => {
     await expect(changeName(organization.id, { name: "  Renamed Org  " })).resolves.toEqual({
       id: organization.id,
       name: "Renamed Org",
+      slug: "default",
     });
 
     await expect(get(organization.id)).resolves.toEqual({
       id: organization.id,
       name: "Renamed Org",
+      slug: "default",
     });
   });
 

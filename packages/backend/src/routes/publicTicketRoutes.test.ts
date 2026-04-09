@@ -1,4 +1,5 @@
 import request from "supertest";
+import { generateText } from "ai";
 import { app } from "../index";
 import {
   closeTestDatabase,
@@ -6,6 +7,14 @@ import {
   truncateTables,
   verifyTestDatabaseConnection,
 } from "../data/testHelper";
+
+jest.mock("ai", () => ({
+  generateText: jest.fn(),
+  Output: {
+    object: jest.fn().mockReturnValue("mocked-object-output"),
+    choice: jest.fn().mockReturnValue("mocked-choice-output"),
+  },
+}));
 
 async function createOrganization(name: string, slug?: string) {
   const orgSlug = slug ?? name.toLowerCase().replace(/\s+/g, "-");
@@ -57,36 +66,18 @@ describe("/api/public/:orgSlug/tickets", () => {
   });
 
   describe("POST /api/public/:orgSlug/tickets", () => {
-    const originalFetch = global.fetch;
     const originalOpenAiKey = process.env.OPENAI_API_KEY;
 
     beforeEach(() => {
       process.env.OPENAI_API_KEY = "test-openai-key";
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          status: "completed",
-          output: [
-            {
-              type: "message",
-              content: [
-                {
-                  type: "output_text",
-                  text: JSON.stringify({
-                    valid_for_support_ticket: true,
-                    rejection_reason: "",
-                  }),
-                },
-              ],
-            },
-          ],
-        }),
-      }) as unknown as typeof fetch;
+      (generateText as jest.Mock).mockResolvedValue({
+        output: { valid_for_support_ticket: true, rejection_reason: "" },
+      });
     });
 
     afterEach(() => {
-      global.fetch = originalFetch;
       process.env.OPENAI_API_KEY = originalOpenAiKey;
+      (generateText as jest.Mock).mockReset();
     });
 
     it("returns 201 with ticket code when valid data is provided", async () => {
@@ -134,26 +125,12 @@ describe("/api/public/:orgSlug/tickets", () => {
 
     it("returns 400 when image validation rejects an attachment", async () => {
       const org = await createOrganization("Acme Corp", "acme-corp");
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          status: "completed",
-          output: [
-            {
-              type: "message",
-              content: [
-                {
-                  type: "output_text",
-                  text: JSON.stringify({
-                    valid_for_support_ticket: false,
-                    rejection_reason: "Image appears unrelated to the support request.",
-                  }),
-                },
-              ],
-            },
-          ],
-        }),
-      }) as unknown as typeof fetch;
+      (generateText as jest.Mock).mockResolvedValue({
+        output: {
+          valid_for_support_ticket: false,
+          rejection_reason: "Image appears unrelated to the support request.",
+        },
+      });
 
       const response = await request(app)
         .post(`/api/public/${org.slug}/tickets`)
@@ -200,13 +177,9 @@ describe("/api/public/:orgSlug/tickets", () => {
       expect(response.body.error).toBe("OpenAI API key is not configured");
     });
 
-    it("returns 502 when OpenAI returns an error for image validation", async () => {
+    it("returns 502 when AI SDK throws an error for image validation", async () => {
       const org = await createOrganization("Acme Corp", "acme-corp");
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: false,
-        status: 429,
-        json: async () => ({ error: { message: "Rate limit" } }),
-      }) as unknown as typeof fetch;
+      (generateText as jest.Mock).mockRejectedValue(new Error("Rate limit"));
 
       const response = await request(app)
         .post(`/api/public/${org.slug}/tickets`)
@@ -225,7 +198,7 @@ describe("/api/public/:orgSlug/tickets", () => {
         });
 
       expect(response.status).toBe(502);
-      expect(response.body.error).toBe("Classification request was rejected");
+      expect(response.body.error).toBe("Classification request failed");
     });
 
     it("returns 400 when name is missing", async () => {

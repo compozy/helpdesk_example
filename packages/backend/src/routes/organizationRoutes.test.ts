@@ -86,7 +86,7 @@ describe("/api/organizations", () => {
       );
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual(organization);
+    expect(response.body).toEqual({ id: organization.id, name: organization.name, slug: "default" });
   });
 
   it("POST /api/organizations/current/change-name returns 403 with non-admin token", async () => {
@@ -129,6 +129,7 @@ describe("/api/organizations", () => {
     expect(response.body).toEqual({
       id: organization.id,
       name: "Renamed Org",
+      slug: "default",
     });
 
     await expect(

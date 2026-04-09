@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import request from "supertest";
+import { generateText } from "ai";
 import { app } from "../index";
 import {
   closeTestDatabase,
@@ -7,6 +8,14 @@ import {
   truncateTables,
   verifyTestDatabaseConnection,
 } from "../data/testHelper";
+
+jest.mock("ai", () => ({
+  generateText: jest.fn(),
+  Output: {
+    object: jest.fn().mockReturnValue("mocked-object-output"),
+    choice: jest.fn().mockReturnValue("mocked-choice-output"),
+  },
+}));
 
 const JWT_SECRET = "test-secret";
 
@@ -556,35 +565,12 @@ describe("/api/tickets", () => {
   });
 
   describe("POST /api/tickets/:id/classify-ticket-type", () => {
-    const originalFetch = global.fetch;
     const originalOpenAiKey = process.env.OPENAI_API_KEY;
 
     afterEach(() => {
-      global.fetch = originalFetch;
       process.env.OPENAI_API_KEY = originalOpenAiKey;
+      (generateText as jest.Mock).mockReset();
     });
-
-    function mockOpenAiResponse(ticketTypeId: number) {
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          status: "completed",
-          output: [
-            {
-              type: "message",
-              status: "completed",
-              role: "assistant",
-              content: [
-                {
-                  type: "output_text",
-                  text: JSON.stringify({ ticket_type_id: ticketTypeId }),
-                },
-              ],
-            },
-          ],
-        }),
-      }) as unknown as typeof fetch;
-    }
 
     it("returns 503 when OPENAI_API_KEY is not set", async () => {
       delete process.env.OPENAI_API_KEY;
@@ -625,7 +611,9 @@ describe("/api/tickets", () => {
       const ticket = await insertTicket(org.id, "TK-CLS0003", {
         description: "Production is down",
       });
-      mockOpenAiResponse(tt.id);
+      (generateText as jest.Mock).mockResolvedValue({
+        output: { ticket_type_id: tt.id },
+      });
       const token = signToken({ userId: user.id, organizationId: org.id, admin: false });
 
       const response = await request(app)
@@ -643,28 +631,16 @@ describe("/api/tickets", () => {
         [ticket.id],
       );
       expect(row.ticket_type_id).toBe(tt.id);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.openai.com/v1/responses",
-        expect.objectContaining({
-          method: "POST",
-          headers: expect.objectContaining({
-            Authorization: "Bearer test-openai-key",
-          }),
-        }),
-      );
+      expect(generateText).toHaveBeenCalled();
     });
 
-    it("returns 502 when OpenAI returns an error status", async () => {
+    it("returns 502 when AI SDK throws an error", async () => {
       process.env.OPENAI_API_KEY = "test-openai-key";
       const org = await createOrganization("Acme Corp");
       const user = await createUser(org.id, "Operator", "op@test.com");
       await createTicketType(org.id, "Bug");
       const ticket = await insertTicket(org.id, "TK-CLS0004");
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: false,
-        status: 429,
-        json: async () => ({ error: { message: "Rate limit" } }),
-      }) as unknown as typeof fetch;
+      (generateText as jest.Mock).mockRejectedValue(new Error("Rate limit"));
       const token = signToken({ userId: user.id, organizationId: org.id, admin: false });
 
       const response = await request(app)
@@ -672,7 +648,7 @@ describe("/api/tickets", () => {
         .set("Authorization", `Bearer ${token}`);
 
       expect(response.status).toBe(502);
-      expect(response.body.error).toBe("Classification request was rejected");
+      expect(response.body.error).toBe("Classification request failed");
     });
 
     it("returns 404 for a ticket in another organization", async () => {
@@ -695,35 +671,12 @@ describe("/api/tickets", () => {
   });
 
   describe("POST /api/tickets/:id/classify-sentiment", () => {
-    const originalFetch = global.fetch;
     const originalOpenAiKey = process.env.OPENAI_API_KEY;
 
     afterEach(() => {
-      global.fetch = originalFetch;
       process.env.OPENAI_API_KEY = originalOpenAiKey;
+      (generateText as jest.Mock).mockReset();
     });
-
-    function mockOpenAiSentiment(sentiment: string) {
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          status: "completed",
-          output: [
-            {
-              type: "message",
-              status: "completed",
-              role: "assistant",
-              content: [
-                {
-                  type: "output_text",
-                  text: JSON.stringify({ sentiment }),
-                },
-              ],
-            },
-          ],
-        }),
-      }) as unknown as typeof fetch;
-    }
 
     it("returns 503 when OPENAI_API_KEY is not set", async () => {
       delete process.env.OPENAI_API_KEY;
@@ -747,7 +700,9 @@ describe("/api/tickets", () => {
       const ticket = await insertTicket(org.id, "TK-SEN0002", {
         description: "Thanks for the quick help!",
       });
-      mockOpenAiSentiment("positive");
+      (generateText as jest.Mock).mockResolvedValue({
+        output: "positive",
+      });
       const token = signToken({ userId: user.id, organizationId: org.id, admin: false });
 
       const response = await request(app)
