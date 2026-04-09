@@ -56,17 +56,22 @@ function decodeToken(token: string): DecodedToken | null {
 
     const parsedPayload = JSON.parse(decodeBase64Url(payload)) as Partial<DecodedToken>;
 
+    const userId = parsedPayload.userId;
+    const organizationId = parsedPayload.organizationId;
+
     if (
-      !Number.isInteger(parsedPayload.userId) ||
-      !Number.isInteger(parsedPayload.organizationId) ||
+      userId === undefined ||
+      organizationId === undefined ||
+      !Number.isInteger(userId) ||
+      !Number.isInteger(organizationId) ||
       typeof parsedPayload.admin !== "boolean"
     ) {
       return null;
     }
 
     return {
-      userId: parsedPayload.userId,
-      organizationId: parsedPayload.organizationId,
+      userId,
+      organizationId,
       admin: parsedPayload.admin,
     };
   } catch {

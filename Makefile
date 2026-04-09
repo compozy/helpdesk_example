@@ -1,27 +1,28 @@
-.PHONY: setup dev test db\:reset db\:reset\:test db\:seed
+.PHONY: setup dev test typecheck db\:reset db\:reset\:test db\:seed
 
 setup:
-	@echo "Installing backend dependencies..."
-	cd packages/backend && npm install
-	@echo "Installing frontend dependencies..."
-	cd packages/frontend && npm install
+	@echo "Installing workspace dependencies (bun)..."
+	bun install
 	@echo "Starting PostgreSQL (dev + test)..."
 	docker compose -f docker/docker-compose.yml up -d
 
 dev:
 	@echo "Starting backend on http://localhost:3000 and frontend on http://localhost:5173..."
 	@trap 'kill 0' INT TERM EXIT; \
-	cd packages/backend && npm run dev & \
-	cd packages/frontend && npm run dev & \
+	cd packages/backend && bun run dev & \
+	cd packages/frontend && bun run dev & \
 	wait
+
+typecheck:
+	bun run typecheck
 
 test:
 	@echo "Ensuring test database is running..."
 	docker compose -f docker/docker-compose.yml up -d postgres-test
 	@echo "Running frontend Vitest suite..."
-	cd packages/frontend && npm run test
+	cd packages/frontend && bun run test
 	@echo "Running backend Jest suite..."
-	cd packages/backend && npm run test
+	cd packages/backend && bun run test
 
 db\:reset:
 	@echo "Resetting dev PostgreSQL volume and recreating the container..."

@@ -192,8 +192,8 @@ describe("SignupPage", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /criar organização/i }));
 
-    await waitFor(() => expect(router.state.location.pathname).toBe("/signin"));
-    expect(screen.getByRole("heading", { name: /sign in/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /sign in/i })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/signin");
   });
 
   it("includes a link to /signin", () => {

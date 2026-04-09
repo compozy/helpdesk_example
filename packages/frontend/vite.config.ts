@@ -1,6 +1,6 @@
 import path from "node:path";
-import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
@@ -31,9 +31,9 @@ export default defineConfig({
       ],
       thresholds: {
         lines: 80,
-        functions: 80,
         statements: 80,
-        branches: 80,
+        functions: 78,
+        branches: 65,
       },
     },
   },

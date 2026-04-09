@@ -3,7 +3,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 const openai = createOpenAI();
 
 export const getClassificationModel = () =>
-  openai(process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini");
+  openai(process.env.OPENAI_MODEL?.trim() || "gpt-5.4-nano");
 
 export const getImageValidationModel = () =>
   openai(
