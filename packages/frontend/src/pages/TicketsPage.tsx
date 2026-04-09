@@ -65,7 +65,7 @@ function ListSentimentBadge({
     negative: "bg-destructive/10 text-destructive border-destructive/20",
   };
   return (
-    <span className={`inline-flex max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-xs ${styles[sentiment]}`}>
+    <span className={`inline-flex max-w-28 truncate rounded-full border px-2 py-0.5 text-xs ${styles[sentiment]}`}>
       {labels[sentiment]}
     </span>
   );

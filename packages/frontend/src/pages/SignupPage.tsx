@@ -171,9 +171,9 @@ function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(32,156,255,0.12),_transparent_35%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,1))] px-6 py-16 text-foreground dark:bg-[radial-gradient(circle_at_top,_rgba(32,156,255,0.08),_transparent_35%),linear-gradient(180deg,_hsl(215_25%_9%),_hsl(215_25%_9%))]">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(32,156,255,0.12),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,1))] px-6 py-16 text-foreground dark:bg-[radial-gradient(circle_at_top,rgba(32,156,255,0.08),transparent_35%),linear-gradient(180deg,hsl(215_25%_9%),hsl(215_25%_9%))]">
       <section className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="hidden rounded-[28px] border border-primary/20 bg-[linear-gradient(160deg,_rgba(32,156,255,0.08),_hsl(215_25%_10%)_42%,_rgba(104,224,207,0.06))] px-10 py-12 text-foreground shadow-soft dark:border-primary/15 lg:block">
+        <div className="hidden rounded-[28px] border border-primary/20 bg-[linear-gradient(160deg,rgba(32,156,255,0.08),hsl(215_25%_10%)_42%,rgba(104,224,207,0.06))] px-10 py-12 text-foreground shadow-soft dark:border-primary/15 lg:block">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
             {t("signup.workspaceBadge")}
           </div>

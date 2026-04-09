@@ -91,7 +91,7 @@ function SigninPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(32,156,255,0.14),_transparent_34%),linear-gradient(180deg,_rgba(248,250,252,1),_rgba(255,255,255,0.96))] px-6 py-16 text-foreground dark:bg-[radial-gradient(circle_at_top_right,_rgba(32,156,255,0.1),_transparent_34%),linear-gradient(180deg,_hsl(215_25%_9%),_hsl(215_25%_9%))]">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(32,156,255,0.14),transparent_34%),linear-gradient(180deg,rgba(248,250,252,1),rgba(255,255,255,0.96))] px-6 py-16 text-foreground dark:bg-[radial-gradient(circle_at_top_right,rgba(32,156,255,0.1),transparent_34%),linear-gradient(180deg,hsl(215_25%_9%),hsl(215_25%_9%))]">
       <section className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="rounded-[28px] border border-border/70 bg-card/95 p-8 shadow-soft sm:p-10">
           <div className="mb-8 space-y-3">
@@ -172,7 +172,7 @@ function SigninPage() {
           </p>
         </div>
 
-        <div className="hidden rounded-[28px] border border-primary/20 bg-[linear-gradient(160deg,_rgba(32,156,255,0.12),_rgba(255,255,255,0.9)_42%,_rgba(104,224,207,0.06))] px-10 py-12 shadow-soft dark:bg-[linear-gradient(160deg,_rgba(32,156,255,0.1),_hsl(215_25%_12%)_42%,_rgba(104,224,207,0.04))] lg:block">
+        <div className="hidden rounded-[28px] border border-primary/20 bg-[linear-gradient(160deg,rgba(32,156,255,0.12),rgba(255,255,255,0.9)_42%,rgba(104,224,207,0.06))] px-10 py-12 shadow-soft dark:bg-[linear-gradient(160deg,rgba(32,156,255,0.1),hsl(215_25%_12%)_42%,rgba(104,224,207,0.04))] lg:block">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
             {t("signin.secureBadge")}
           </div>

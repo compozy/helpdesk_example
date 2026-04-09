@@ -17,7 +17,7 @@ const KpiCard = ({ label, value, icon, className }: KpiCardProps) => {
     >
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 text-primary">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-linear-to-br from-primary/15 to-accent/10 text-primary">
           {icon}
         </div>
       </div>

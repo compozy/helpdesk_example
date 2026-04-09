@@ -365,7 +365,7 @@ function TicketTypesPage() {
           </TableHeader>
           <TableBody>
             {formMode?.type === "create" ? (
-              <TableRow className="bg-primary/[0.03] align-top hover:bg-primary/[0.05]">
+              <TableRow className="bg-primary/3 align-top hover:bg-primary/5">
                 <TableCell className="align-top">
                   <div className="space-y-1.5">
                     <Input
@@ -435,7 +435,7 @@ function TicketTypesPage() {
               if (isEditing) {
                 return (
                   <TableRow
-                    className="bg-primary/[0.03] align-top hover:bg-primary/[0.05]"
+                    className="bg-primary/3 align-top hover:bg-primary/5"
                     key={ticketType.id}
                   >
                     <TableCell className="align-top">

@@ -127,7 +127,7 @@ function AppSidebar() {
           className="flex items-center gap-3 rounded-lg px-1 py-1 transition-all duration-200 hover:opacity-80"
           to="/"
         >
-          <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-soft">
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-primary to-primary/80 text-primary-foreground shadow-soft">
             <svg
               className="h-4 w-4"
               fill="none"

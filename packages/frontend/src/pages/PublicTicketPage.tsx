@@ -185,7 +185,7 @@ function PublicTicketPage() {
 
   if (ticketCode) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(32,156,255,0.12),_transparent_35%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,1))] px-6 py-16 text-foreground dark:bg-[radial-gradient(circle_at_top,_rgba(32,156,255,0.08),_transparent_35%),linear-gradient(180deg,_hsl(215_25%_9%),_hsl(215_25%_9%))]">
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(32,156,255,0.12),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,1))] px-6 py-16 text-foreground dark:bg-[radial-gradient(circle_at_top,rgba(32,156,255,0.08),transparent_35%),linear-gradient(180deg,hsl(215_25%_9%),hsl(215_25%_9%))]">
         <section className="mx-auto max-w-lg">
           <div className="rounded-[28px] border border-border/70 bg-card/95 p-8 shadow-soft sm:p-10 text-center space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-foreground">
@@ -216,7 +216,7 @@ function PublicTicketPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(32,156,255,0.12),_transparent_35%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,1))] px-6 py-16 text-foreground dark:bg-[radial-gradient(circle_at_top,_rgba(32,156,255,0.08),_transparent_35%),linear-gradient(180deg,_hsl(215_25%_9%),_hsl(215_25%_9%))]">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(32,156,255,0.12),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,1))] px-6 py-16 text-foreground dark:bg-[radial-gradient(circle_at_top,rgba(32,156,255,0.08),transparent_35%),linear-gradient(180deg,hsl(215_25%_9%),hsl(215_25%_9%))]">
       <section className="mx-auto max-w-lg">
         <div className="rounded-[28px] border border-border/70 bg-card/95 p-8 shadow-soft sm:p-10">
           <div className="mb-8 space-y-3">
