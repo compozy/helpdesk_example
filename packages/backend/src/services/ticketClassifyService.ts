@@ -28,15 +28,14 @@ export interface ClassifySentimentResult {
   sentiment: SentimentValue;
 }
 
-interface TicketForClassification {
-  id: number;
+export interface TicketClassificationInput {
   name: string;
   email: string;
   description: string;
 }
 
 function buildUserPrompt(
-  ticket: TicketForClassification,
+  ticket: TicketClassificationInput,
   types: TicketType[],
 ): string {
   const typesBlock = types
@@ -60,7 +59,7 @@ function buildUserPrompt(
   ].join("\n");
 }
 
-function buildSentimentUserPrompt(ticket: TicketForClassification): string {
+function buildSentimentUserPrompt(ticket: TicketClassificationInput): string {
   return [
     "Classify the emotional tone of the customer who opened this support ticket.",
     "Focus on how the customer sounds in the description (frustrated, neutral, appreciative, etc.).",
@@ -73,6 +72,61 @@ function buildSentimentUserPrompt(ticket: TicketForClassification): string {
   ].join("\n");
 }
 
+export async function classifyTicketType(
+  ticket: TicketClassificationInput,
+  types: TicketType[],
+): Promise<ClassifyTicketTypeResult> {
+  const allowedIds = types.map((t) => t.id);
+  const schema = z.object({
+    ticket_type_id: z.number().int(),
+  });
+
+  const result = await generateText({
+    model: getClassificationModel(),
+    output: Output.object({
+      schema,
+      name: "ticket_type_pick",
+      description: "Pick the best ticket_type_id for the ticket",
+    }),
+    system:
+      "You classify support tickets into exactly one organizational ticket type. Reply only with structured JSON matching the schema.",
+    prompt: buildUserPrompt(ticket, types),
+  });
+
+  const ticketTypeId = result.output?.ticket_type_id;
+  if (!ticketTypeId || !allowedIds.includes(ticketTypeId)) {
+    throw new TicketClassifyExternalError(
+      "Classification returned an unknown ticket type",
+    );
+  }
+
+  const typeRow = types.find((t) => t.id === ticketTypeId)!;
+  return { ticketTypeId, ticketTypeName: typeRow.name };
+}
+
+export async function classifySentiment(
+  ticket: TicketClassificationInput,
+): Promise<ClassifySentimentResult> {
+  const result = await generateText({
+    model: getClassificationModel(),
+    output: Output.choice({
+      options: [...SENTIMENT_VALUES],
+      name: "ticket_sentiment",
+      description: "Customer sentiment for the ticket",
+    }),
+    system:
+      "You classify customer sentiment in support tickets. Reply only with structured JSON matching the schema.",
+    prompt: buildSentimentUserPrompt(ticket),
+  });
+
+  const sentiment = result.output;
+  if (!sentiment || !SENTIMENT_VALUES.includes(sentiment)) {
+    throw new TicketClassifyExternalError("Invalid classification result");
+  }
+
+  return { sentiment };
+}
+
 export async function classifyAndPersistTicketType(
   ticketId: number,
   organizationId: number,
@@ -82,8 +136,8 @@ export async function classifyAndPersistTicketType(
     throw new TicketClassifyExternalError("OpenAI API key is not configured");
   }
 
-  const ticket = await db.oneOrNone<TicketForClassification>(
-    `SELECT id, name, email, description
+  const ticket = await db.oneOrNone<TicketClassificationInput>(
+    `SELECT name, email, description
      FROM tickets
      WHERE id = $1 AND organization_id = $2`,
     [ticketId, organizationId],
@@ -98,54 +152,20 @@ export async function classifyAndPersistTicketType(
     throw new ValidationError("No ticket types defined for this organization");
   }
 
-  const allowedIds = types.map((t) => t.id);
-  const schema = z.object({
-    ticket_type_id: z.number().int(),
-  });
-
-  let result: Awaited<ReturnType<typeof generateText>>;
+  let classification: ClassifyTicketTypeResult;
   try {
-    result = await generateText({
-      model: getClassificationModel(),
-      output: Output.object({
-        schema,
-        name: "ticket_type_pick",
-        description: "Pick the best ticket_type_id for the ticket",
-      }),
-      system:
-        "You classify support tickets into exactly one organizational ticket type. Reply only with structured JSON matching the schema.",
-      prompt: buildUserPrompt(ticket, types),
-    });
+    classification = await classifyTicketType(ticket, types);
   } catch {
     throw new TicketClassifyExternalError("Classification request failed");
-  }
-
-  const output = result.output;
-  if (!output) {
-    throw new TicketClassifyExternalError("Invalid classification result");
-  }
-
-  const ticketTypeId = output.ticket_type_id;
-  if (!allowedIds.includes(ticketTypeId)) {
-    throw new TicketClassifyExternalError(
-      "Classification returned an unknown ticket type",
-    );
-  }
-
-  const typeRow = types.find((t) => t.id === ticketTypeId);
-  if (!typeRow) {
-    throw new TicketClassifyExternalError(
-      "Classification returned an unknown ticket type",
-    );
   }
 
   await db.none(
     `UPDATE tickets SET ticket_type_id = $1, updated_at = NOW()
      WHERE id = $2 AND organization_id = $3`,
-    [ticketTypeId, ticketId, organizationId],
+    [classification.ticketTypeId, ticketId, organizationId],
   );
 
-  return { ticketTypeId, ticketTypeName: typeRow.name };
+  return classification;
 }
 
 export async function classifyAndPersistSentiment(
@@ -157,8 +177,8 @@ export async function classifyAndPersistSentiment(
     throw new TicketClassifyExternalError("OpenAI API key is not configured");
   }
 
-  const ticket = await db.oneOrNone<TicketForClassification>(
-    `SELECT id, name, email, description
+  const ticket = await db.oneOrNone<TicketClassificationInput>(
+    `SELECT name, email, description
      FROM tickets
      WHERE id = $1 AND organization_id = $2`,
     [ticketId, organizationId],
@@ -168,33 +188,18 @@ export async function classifyAndPersistSentiment(
     throw new NotFoundError("Ticket not found");
   }
 
-  let result: Awaited<ReturnType<typeof generateText>>;
+  let classification: ClassifySentimentResult;
   try {
-    result = await generateText({
-      model: getClassificationModel(),
-      output: Output.choice({
-        options: [...SENTIMENT_VALUES],
-        name: "ticket_sentiment",
-        description: "Customer sentiment for the ticket",
-      }),
-      system:
-        "You classify customer sentiment in support tickets. Reply only with structured JSON matching the schema.",
-      prompt: buildSentimentUserPrompt(ticket),
-    });
+    classification = await classifySentiment(ticket);
   } catch {
     throw new TicketClassifyExternalError("Classification request failed");
-  }
-
-  const sentiment = result.output;
-  if (!sentiment) {
-    throw new TicketClassifyExternalError("Invalid classification result");
   }
 
   await db.none(
     `UPDATE tickets SET sentiment = $1, updated_at = NOW()
      WHERE id = $2 AND organization_id = $3`,
-    [sentiment, ticketId, organizationId],
+    [classification.sentiment, ticketId, organizationId],
   );
 
-  return { sentiment };
+  return classification;
 }

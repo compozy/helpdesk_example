@@ -221,6 +221,7 @@ const ptBR = {
     createdTitle: "Seu chamado foi enviado",
     createdDescription: "Salve o c\u00f3digo abaixo para acompanhar o status da sua solicita\u00e7\u00e3o.",
     trackTicket: "Acompanhar seu chamado",
+    backToTickets: "Voltar para chamados",
   },
   publicTicketTracking: {
     badge: "Acompanhar",

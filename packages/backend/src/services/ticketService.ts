@@ -1,7 +1,16 @@
 import { db } from "../data/database";
 import { generateUniqueCode } from "./ticketCodeService";
 import { validateSupportTicketImages } from "./ticketAttachmentImageValidationService";
-import { ValidationError, NotFoundError } from "./ticketTypeService";
+import {
+  classifyTicketType,
+  classifySentiment,
+  type SentimentValue,
+} from "./ticketClassifyService";
+import {
+  ValidationError,
+  NotFoundError,
+  list as listTicketTypes,
+} from "./ticketTypeService";
 
 const MAX_BASE64_SIZE = 1_370_000;
 
@@ -123,14 +132,37 @@ export async function createTicket(
     }
   }
 
+  const ticketInput = { name, email, description };
+  let ticketTypeId = input.ticketTypeId ?? null;
+  let sentiment: SentimentValue | null = null;
+
+  if (!ticketTypeId) {
+    const types = await listTicketTypes(organizationId);
+    if (types.length > 0) {
+      try {
+        const result = await classifyTicketType(ticketInput, types);
+        ticketTypeId = result.ticketTypeId;
+      } catch {
+        // Classification failed; proceed with null ticket_type_id
+      }
+    }
+  }
+
+  try {
+    const result = await classifySentiment(ticketInput);
+    sentiment = result.sentiment;
+  } catch {
+    // Classification failed; proceed with null sentiment
+  }
+
   const code = await generateUniqueCode();
 
   return db.tx(async (t) => {
     const ticket = await t.one<{ id: number; code: string }>(
-      `INSERT INTO tickets (code, name, email, phone, description, ticket_type_id, organization_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO tickets (code, name, email, phone, description, ticket_type_id, sentiment, organization_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id, code`,
-      [code, name, email, phone, description, input.ticketTypeId ?? null, organizationId],
+      [code, name, email, phone, description, ticketTypeId, sentiment, organizationId],
     );
 
     if (input.attachments && input.attachments.length > 0) {

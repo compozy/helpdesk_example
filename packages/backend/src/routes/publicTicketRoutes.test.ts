@@ -201,6 +201,33 @@ describe("/api/public/:orgSlug/tickets", () => {
       expect(response.body.error).toBe("Classification request failed");
     });
 
+    it("returns 201 with classified ticket type and sentiment", async () => {
+      const org = await createOrganization("Acme Corp", "acme-corp");
+      const ticketType = await createTicketType(org.id, "Bug");
+
+      (generateText as jest.Mock)
+        .mockResolvedValueOnce({ output: { ticket_type_id: ticketType.id } })
+        .mockResolvedValueOnce({ output: "negative" });
+
+      const response = await request(app)
+        .post(`/api/public/${org.slug}/tickets`)
+        .send({
+          name: "John Doe",
+          email: "john@example.com",
+          phone: "+5511999999999",
+          description: "My app keeps crashing when I try to login",
+        });
+
+      expect(response.status).toBe(201);
+
+      const ticket = await testDb.one<{ ticketTypeId: number | null; sentiment: string | null }>(
+        `SELECT ticket_type_id AS "ticketTypeId", sentiment FROM tickets WHERE code = $1`,
+        [response.body.code],
+      );
+      expect(ticket.ticketTypeId).toBe(ticketType.id);
+      expect(ticket.sentiment).toBe("negative");
+    });
+
     it("returns 400 when name is missing", async () => {
       const org = await createOrganization("Acme Corp", "acme-corp");
 

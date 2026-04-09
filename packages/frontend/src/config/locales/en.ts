@@ -221,6 +221,7 @@ const en = {
     createdTitle: "Your ticket has been submitted",
     createdDescription: "Save the code below to track the status of your request.",
     trackTicket: "Track your ticket",
+    backToTickets: "Back to tickets",
   },
   publicTicketTracking: {
     badge: "Track",

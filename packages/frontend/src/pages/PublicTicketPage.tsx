@@ -203,12 +203,20 @@ function PublicTicketPage() {
             >
               {ticketCode}
             </div>
-            <Link
-              className="inline-block text-sm font-semibold text-primary hover:text-primary/80"
-              to={`/${orgSlug}/tickets/track`}
-            >
-              {t("publicTicket.trackTicket")}
-            </Link>
+            <div className="flex flex-col items-center gap-2">
+              <Link
+                className="inline-block text-sm font-semibold text-primary hover:text-primary/80"
+                to={`/${orgSlug}/tickets/track`}
+              >
+                {t("publicTicket.trackTicket")}
+              </Link>
+              <Link
+                className="inline-block text-sm text-muted-foreground hover:text-foreground"
+                to="/tickets"
+              >
+                {t("publicTicket.backToTickets")}
+              </Link>
+            </div>
           </div>
         </section>
       </main>

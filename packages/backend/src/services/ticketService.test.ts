@@ -176,6 +176,62 @@ describe("ticketService", () => {
       expect(attachments).toHaveLength(1);
       expect(attachments[0].filename).toBe("doc.pdf");
     });
+
+    it("classifies ticket type and sentiment when no ticketTypeId is provided", async () => {
+      const org = await ensureDefaultOrganization();
+      const ticketType = await createTicketType(org.id, "Bug");
+
+      (generateText as jest.Mock)
+        .mockResolvedValueOnce({ output: { ticket_type_id: ticketType.id } })
+        .mockResolvedValueOnce({ output: "negative" });
+
+      const result = await createTicket(validInput, org.id);
+
+      const ticket = await testDb.one<{ ticketTypeId: number | null; sentiment: string | null }>(
+        `SELECT ticket_type_id AS "ticketTypeId", sentiment FROM tickets WHERE code = $1`,
+        [result.code],
+      );
+      expect(ticket.ticketTypeId).toBe(ticketType.id);
+      expect(ticket.sentiment).toBe("negative");
+    });
+
+    it("skips type classification when ticketTypeId is provided but classifies sentiment", async () => {
+      const org = await ensureDefaultOrganization();
+      const ticketType = await createTicketType(org.id, "Bug");
+
+      (generateText as jest.Mock)
+        .mockResolvedValueOnce({ output: "positive" });
+
+      const result = await createTicket(
+        { ...validInput, ticketTypeId: ticketType.id },
+        org.id,
+      );
+
+      const ticket = await testDb.one<{ ticketTypeId: number | null; sentiment: string | null }>(
+        `SELECT ticket_type_id AS "ticketTypeId", sentiment FROM tickets WHERE code = $1`,
+        [result.code],
+      );
+      expect(ticket.ticketTypeId).toBe(ticketType.id);
+      expect(ticket.sentiment).toBe("positive");
+    });
+
+    it("creates ticket with null values when classification fails", async () => {
+      const org = await ensureDefaultOrganization();
+      await createTicketType(org.id, "Bug");
+
+      (generateText as jest.Mock).mockRejectedValue(new Error("API error"));
+
+      const result = await createTicket(validInput, org.id);
+
+      expect(result.code).toMatch(/^TK-[A-Z0-9]{8}$/);
+
+      const ticket = await testDb.one<{ ticketTypeId: number | null; sentiment: string | null }>(
+        `SELECT ticket_type_id AS "ticketTypeId", sentiment FROM tickets WHERE code = $1`,
+        [result.code],
+      );
+      expect(ticket.ticketTypeId).toBeNull();
+      expect(ticket.sentiment).toBeNull();
+    });
   });
 
   describe("listTickets", () => {
