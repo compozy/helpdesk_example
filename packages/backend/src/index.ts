@@ -1,6 +1,10 @@
 import "dotenv/config";
 import cors from "cors";
-import express, { type NextFunction, type Request, type Response } from "express";
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import { db } from "./data/database";
 import { authRoutes } from "./routes/authRoutes";
 import { organizationRoutes } from "./routes/organizationRoutes";
@@ -23,21 +27,36 @@ app.use("/api/users", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/public", publicTicketRoutes);
 
-app.get("/api/health", async (_req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await db.one<{ now: string }>("SELECT NOW()");
-    res.json({ status: "ok", time: result.now });
-  } catch (error) {
-    next(error);
-  }
-});
+app.get(
+  "/api/health",
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await db.one<{ now: string }>("SELECT NOW()");
+      res.json({ status: "ok", time: result.now });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
-app.use((_error: unknown, _req: Request, res: Response, _next: NextFunction) => {
-  res.status(500).json({ status: "error" });
-});
+app.use(
+  (_error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    res.status(500).json({ status: "error" });
+  },
+);
 
 if (require.main === module) {
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
+
+  const shutdown = () => {
+    server.close(() => {
+      db.$pool.end();
+      process.exit(0);
+    });
+  };
+
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
 }

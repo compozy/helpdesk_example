@@ -1,6 +1,21 @@
 {
   "version": 1,
   "skills": {
+    "ai-sdk": {
+      "source": "vercel/ai",
+      "sourceType": "github",
+      "computedHash": "81af098a4ce6f0e323c1bd02b8e79df3bbaed57cbf1c4060f58ddc95de5545a1"
+    },
+    "context7": {
+      "source": "pedronauck/skills",
+      "sourceType": "github",
+      "computedHash": "23f0178420043f01cd0f00745eb06eaac6f3eee4ef58f87f1ae353c2a408f79c"
+    },
+    "exa-web-search-free": {
+      "source": "pedronauck/skills",
+      "sourceType": "github",
+      "computedHash": "4456756ff2cf096cc7c6d2fc9d6771e2a1ea0084868f28b69f68157757ee50c8"
+    },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",
