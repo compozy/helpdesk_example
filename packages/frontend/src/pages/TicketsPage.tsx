@@ -9,9 +9,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import QuestionModal from "@/components/QuestionModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { TicketSentiment, TicketSummary } from "@/types/types";
+import ChatAssistant from "@/components/ChatAssistant";
 
 type StatusFilter = "all" | "new" | "assigned" | "closed";
 
@@ -94,6 +96,7 @@ function TicketsPage() {
   const [orgSlug, setOrgSlug] = useState<string | null>(null);
   const [classifyingTicketId, setClassifyingTicketId] = useState<number | null>(null);
   const [classifyingSentimentTicketId, setClassifyingSentimentTicketId] = useState<number | null>(null);
+  const [questionModalOpen, setQuestionModalOpen] = useState(false);
   const [classifyError, setClassifyError] = useState<string | null>(null);
 
   const classifyBusy = classifyingTicketId !== null || classifyingSentimentTicketId !== null;
@@ -261,7 +264,7 @@ function TicketsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          {/* <ChatAssistant /> */}
+          <ChatAssistant />
           {orgSlug && (
             <Button
               onClick={() => window.open(`/${orgSlug}/tickets/new`, "_blank")}
@@ -544,6 +547,7 @@ function TicketsPage() {
           </div>
         </div>
       ) : null}
+
     </div>
   );
 }

@@ -294,6 +294,17 @@ const ptBR = {
     title: "Assistente IA",
     description: "Fa\u00e7a perguntas sobre seus chamados e m\u00e9tricas.",
     placeholder: "Pergunte sobre chamados...",
+    emptyPrompt: "Por favor, digite uma pergunta.",
+    questionError:
+      "N\u00e3o foi poss\u00edvel obter uma resposta. Por favor, tente novamente.",
+    emptyModelResponse: "(Nenhuma resposta em texto do modelo.)",
+    responseLabel: "Resposta",
+    toolRunning: "Executando…",
+    toolArguments: "Argumentos",
+    toolResult: "Resultado",
+    toolNeedsAction: "Esta etapa precisa da sua a\u00e7\u00e3o no aplicativo.",
+    toolCancelled: "A execu\u00e7\u00e3o da ferramenta foi cancelada.",
+    toolIncomplete: "A ferramenta n\u00e3o concluiu.",
   },
   auth: {
     useAuthError: "useAuth deve ser usado dentro de um AuthProvider",

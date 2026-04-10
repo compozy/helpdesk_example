@@ -67,8 +67,7 @@ export function createHelpdeskOperatorTools({
       description:
         "Get full ticket detail by numeric id: status, description, comments, attachments metadata, assignment history.",
       inputSchema: getTicketInputSchema,
-      execute: async ({ ticketId }) =>
-        getTicketById(ticketId, organizationId),
+      execute: async ({ ticketId }) => getTicketById(ticketId, organizationId),
     }),
     getDashboardMetrics: tool({
       description:

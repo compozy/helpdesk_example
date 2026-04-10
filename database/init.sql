@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS ticket_assignments (
 
 -- Organization
 INSERT INTO organizations (id, name, slug) VALUES (1, 'ERP Magic', 'erp-magic')
-ON CONFLICT (slug) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- Users (password: asdQWE123)
 -- rodrigo = admin, pedro/marcio/ciro = support agents
@@ -116,7 +116,7 @@ INSERT INTO ticket_types (id, name, description, organization_id) VALUES
   (1, 'Dúvida',      'Chamados relacionados a dúvidas sobre o uso do ERP', 1),
   (2, 'Problema',    'Relatos de erros, falhas e comportamentos inesperados', 1),
   (3, 'Sugestão',    'Ideias e sugestões de melhoria para o sistema', 1)
-ON CONFLICT (LOWER(name), organization_id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 SELECT setval('ticket_types_id_seq', 3);
 
@@ -233,7 +233,8 @@ INSERT INTO tickets (id, code, status, name, email, phone, description, ticket_t
 (97, 'TK-O5Q6S7U8', 'closed', 'Carla Figueira',      'carla.figueira@gmail.com',      '(71) 92333-1067', 'O sistema não está calculando a multa e juros para títulos vencidos no módulo de contas a receber.', 2, 2, 1, '2026-03-06 08:15:00', '2026-03-10 15:00:00'),
 (98, 'TK-W9Y0A1C2', 'closed', 'Roberto Senna',       'roberto.senna@empresa.com.br',  '(81) 91444-1068', 'Seria útil ter a funcionalidade de assinatura digital de documentos dentro do ERP.', 3, 3, 1, '2026-03-07 11:00:00', '2026-03-12 09:00:00'),
 (99, 'TK-E3G4I5K6', 'closed', 'Livia Campos',        'livia.campos@outlook.com',      '(85) 90666-1069', 'Ao tentar importar a tabela de NCM atualizada, o sistema rejeita o arquivo dizendo que o formato é incompatível.', 2, 4, 1, '2026-03-08 09:30:00', '2026-03-13 10:00:00'),
-(100,'TK-M7O8Q9S0', 'closed', 'Willian Souza',       'willian.souza@yahoo.com.br',    '(91) 99666-1070', 'Preciso saber como emitir a Nota Fiscal de Consumidor Eletrônica (NFC-e) em contingência offline.', 1, 2, 1, '2026-03-09 08:00:00', '2026-03-14 14:00:00');
+(100,'TK-M7O8Q9S0', 'closed', 'Willian Souza',       'willian.souza@yahoo.com.br',    '(91) 99666-1070', 'Preciso saber como emitir a Nota Fiscal de Consumidor Eletrônica (NFC-e) em contingência offline.', 1, 2, 1, '2026-03-09 08:00:00', '2026-03-14 14:00:00')
+ON CONFLICT DO NOTHING;
 
 SELECT setval('tickets_id_seq', 100);
 
@@ -242,7 +243,9 @@ SELECT setval('tickets_id_seq', 100);
 -- assigned_by_id = 1 (Rodrigo, admin)
 -- =============================================================================
 
-INSERT INTO ticket_assignments (ticket_id, assigned_to_id, assigned_by_id, created_at) VALUES
+INSERT INTO ticket_assignments (ticket_id, assigned_to_id, assigned_by_id, created_at)
+SELECT ticket_id, assigned_to_id, assigned_by_id, created_at::timestamp
+FROM (VALUES
 -- Assigned tickets
 (31, 2, 1, '2026-03-11 10:00:00'),
 (32, 3, 1, '2026-03-11 14:00:00'),
@@ -314,7 +317,15 @@ INSERT INTO ticket_assignments (ticket_id, assigned_to_id, assigned_by_id, creat
 (97, 2, 1, '2026-03-07 10:00:00'),
 (98, 3, 1, '2026-03-08 10:00:00'),
 (99, 4, 1, '2026-03-09 10:00:00'),
-(100, 2, 1, '2026-03-10 10:00:00');
+(100, 2, 1, '2026-03-10 10:00:00')
+) AS v(ticket_id, assigned_to_id, assigned_by_id, created_at)
+WHERE NOT EXISTS (
+  SELECT 1 FROM ticket_assignments a
+  WHERE a.ticket_id = v.ticket_id
+    AND a.assigned_to_id = v.assigned_to_id
+    AND a.assigned_by_id = v.assigned_by_id
+    AND a.created_at = v.created_at::timestamp
+);
 
 -- =============================================================================
 -- TICKET COMMENTS
@@ -322,7 +333,9 @@ INSERT INTO ticket_assignments (ticket_id, assigned_to_id, assigned_by_id, creat
 -- =============================================================================
 
 -- Comments on assigned tickets (active support)
-INSERT INTO ticket_comments (ticket_id, user_id, content, created_at) VALUES
+INSERT INTO ticket_comments (ticket_id, user_id, content, created_at)
+SELECT ticket_id, user_id, content, created_at::timestamp
+FROM (VALUES
 -- Ticket 31 - NF com data errada (Pedro)
 (31, 2, 'Olá Sandra, estou analisando o problema com a data de emissão das notas fiscais. Consegue me informar qual versão do módulo de faturamento está utilizando?', '2026-03-11 10:30:00'),
 (31, 2, 'Identifiquei que há uma configuração no módulo fiscal que define a data de emissão. Vou verificar se está apontando para a data do pedido em vez da data atual.', '2026-03-11 14:00:00'),
@@ -463,4 +476,12 @@ INSERT INTO ticket_comments (ticket_id, user_id, content, created_at) VALUES
 -- Ticket 100 - NFC-e contingência (Pedro)
 (100, 2, 'Willian, para emitir NFC-e em contingência offline, o sistema precisa estar configurado com o CSC (Código de Segurança do Contribuinte) obtido na SEFAZ do seu estado.', '2026-03-10 10:00:00'),
 (100, 2, 'Vá em Configurações > Módulo Fiscal > NFC-e > Contingência e habilite o modo offline. O sistema vai armazenar as notas localmente e transmitir quando a conexão for restabelecida.', '2026-03-12 09:00:00'),
-(100, 2, 'Willian configurou com sucesso e testou a emissão offline. Chamado encerrado.', '2026-03-14 14:00:00');
+(100, 2, 'Willian configurou com sucesso e testou a emissão offline. Chamado encerrado.', '2026-03-14 14:00:00')
+) AS v(ticket_id, user_id, content, created_at)
+WHERE NOT EXISTS (
+  SELECT 1 FROM ticket_comments c
+  WHERE c.ticket_id = v.ticket_id
+    AND c.user_id = v.user_id
+    AND c.content = v.content
+    AND c.created_at = v.created_at::timestamp
+);

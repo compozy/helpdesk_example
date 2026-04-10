@@ -95,7 +95,10 @@ export interface PublicTicketStatus {
   updatedAt: string;
 }
 
-function validateRequiredField(value: string | undefined, fieldName: string): string {
+function validateRequiredField(
+  value: string | undefined,
+  fieldName: string,
+): string {
   if (!value || value.trim().length === 0) {
     throw new ValidationError(`${fieldName} is required`);
   }
@@ -162,7 +165,16 @@ export async function createTicket(
       `INSERT INTO tickets (code, name, email, phone, description, ticket_type_id, sentiment, organization_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id, code`,
-      [code, name, email, phone, description, ticketTypeId, sentiment, organizationId],
+      [
+        code,
+        name,
+        email,
+        phone,
+        description,
+        ticketTypeId,
+        sentiment,
+        organizationId,
+      ],
     );
 
     if (input.attachments && input.attachments.length > 0) {
@@ -170,7 +182,12 @@ export async function createTicket(
         await t.none(
           `INSERT INTO ticket_attachments (ticket_id, filename, content_type, content)
            VALUES ($1, $2, $3, $4)`,
-          [ticket.id, attachment.filename, attachment.contentType, attachment.content],
+          [
+            ticket.id,
+            attachment.filename,
+            attachment.contentType,
+            attachment.content,
+          ],
         );
       }
     }
@@ -284,21 +301,24 @@ export async function getTicketById(
     [ticketId],
   );
 
-  const commentAttachments = comments.length > 0
-    ? await db.manyOrNone<TicketAttachment & { ticketCommentId: number }>(
-        `SELECT ta.id, ta.filename, ta.content_type AS "contentType",
+  const commentAttachments =
+    comments.length > 0
+      ? await db.manyOrNone<TicketAttachment & { ticketCommentId: number }>(
+          `SELECT ta.id, ta.filename, ta.content_type AS "contentType",
                 ta.content, ta.created_at AS "createdAt",
                 ta.ticket_comment_id AS "ticketCommentId"
          FROM ticket_attachments ta
          WHERE ta.ticket_id = $1 AND ta.ticket_comment_id IS NOT NULL
          ORDER BY ta.created_at ASC`,
-        [ticketId],
-      )
-    : [];
+          [ticketId],
+        )
+      : [];
 
   const commentsWithAttachments: TicketComment[] = comments.map((comment) => ({
     ...comment,
-    attachments: commentAttachments.filter((a) => a.ticketCommentId === comment.id),
+    attachments: commentAttachments.filter(
+      (a) => a.ticketCommentId === comment.id,
+    ),
   }));
 
   const attachments = await db.manyOrNone<TicketAttachment>(
@@ -328,6 +348,23 @@ export async function getTicketById(
     attachments,
     assignments,
   };
+}
+
+export async function getFullTicketByCode(
+  code: string,
+  organizationId: number,
+): Promise<PublicTicketStatus> {
+  const ticket = await db.oneOrNone<PublicTicketStatus>(
+    `SELECT * FROM tickets
+     WHERE code = $1 AND organization_id = $2`,
+    [code, organizationId],
+  );
+
+  if (!ticket) {
+    throw new NotFoundError("Ticket not found");
+  }
+
+  return ticket;
 }
 
 export async function getTicketByCode(
@@ -386,7 +423,11 @@ export async function forwardTicket(
   currentUserId: number,
   organizationId: number,
 ): Promise<void> {
-  const ticket = await db.oneOrNone<{ id: number; status: string; assignedToId: number | null }>(
+  const ticket = await db.oneOrNone<{
+    id: number;
+    status: string;
+    assignedToId: number | null;
+  }>(
     `SELECT id, status, assigned_to_id AS "assignedToId"
      FROM tickets WHERE id = $1 AND organization_id = $2`,
     [ticketId, organizationId],
@@ -401,7 +442,9 @@ export async function forwardTicket(
   }
 
   if (ticket.assignedToId === targetUserId) {
-    throw new ValidationError("Cannot forward ticket to the same user currently assigned");
+    throw new ValidationError(
+      "Cannot forward ticket to the same user currently assigned",
+    );
   }
 
   const targetUser = await db.oneOrNone<{ id: number }>(
@@ -482,7 +525,13 @@ export async function addComment(
         await t.none(
           `INSERT INTO ticket_attachments (ticket_id, ticket_comment_id, filename, content_type, content)
            VALUES ($1, $2, $3, $4, $5)`,
-          [ticketId, comment.id, attachment.filename, attachment.contentType, attachment.content],
+          [
+            ticketId,
+            comment.id,
+            attachment.filename,
+            attachment.contentType,
+            attachment.content,
+          ],
         );
       }
     }
